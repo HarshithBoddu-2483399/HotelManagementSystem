@@ -1,12 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using HotelManagementSystem.Services;
 
 namespace HotelManagementSystem.Controllers
 {
     public class HousekeepingController : Controller
     {
-        public IActionResult Index()
+        private readonly IHousekeepingService _service;
+        public HousekeepingController(IHousekeepingService service) { _service = service; }
+
+        public IActionResult Index() => View(_service.GetPendingTasks());
+
+        [HttpPost]
+        public IActionResult MarkClean(int taskId)
         {
-            return View();
+            _service.MarkClean(taskId);
+            return RedirectToAction("Index");
         }
     }
 }

@@ -1,0 +1,13 @@
+﻿@model HotelManagementSystem.ViewModels.DashboardViewModel
+<h2>Manager Dashboard</h2>
+<div style="display:flex; gap:20px;">
+    <div style="padding:20px; border:1px solid #ddd;">
+        <h3 style="color:green;">Revenue</h3><h2>$@Model.TotalRevenue</h2>
+    </div>
+    <div style="padding:20px; border:1px solid #ddd;">
+        <h3 style="color:blue;">Available Rooms</h3><h2>@Model.RoomsAvailable</h2>
+    </div>
+    <div style="padding:20px; border:1px solid #ddd;">
+        <h3 style="color:red;">Pending Cleaning</h3><h2>@Model.PendingTasks</h2>
+    </div>
+</div>

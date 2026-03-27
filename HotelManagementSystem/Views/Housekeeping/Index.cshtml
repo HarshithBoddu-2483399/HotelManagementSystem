@@ -1,0 +1,12 @@
+﻿@model IEnumerable<HotelManagementSystem.Models.HousekeepingTask>
+<h2>Cleaning Schedule</h2>
+@foreach (var t in Model)
+{
+    <div style="border:1px solid #ccc; padding:15px; margin-bottom:10px; width:300px;">
+        <h3>Room @t.RoomId</h3>
+        <form action="/Housekeeping/MarkClean" method="post">
+            <input type="hidden" name="taskId" value="@t.TaskId" />
+            <button type="submit" style="background:green; color:white; padding:10px; width:100%;">Mark Clean</button>
+        </form>
+    </div>
+}

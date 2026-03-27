@@ -1,0 +1,14 @@
+﻿@model IEnumerable<HotelManagementSystem.Models.Invoice>
+<h2>Financials</h2>
+<form action="/Billing/Checkout" method="post">
+    <input type="number" name="reservationId" placeholder="Enter Reservation ID to Checkout" required />
+    <button type="submit">Process Checkout</button>
+</form>
+<br />
+<table border="1" cellpadding="10" cellspacing="0" style="width:100%; text-align:left;">
+    <tr style="background:#ddd;"><th>Invoice ID</th><th>Res ID</th><th>Date</th><th>Total</th></tr>
+    @foreach (var i in Model)
+    {
+        <tr><td>@i.InvoiceId</td><td>@i.ReservationId</td><td>@i.InvoiceDate.ToShortDateString()</td><td>$@i.TotalAmount</td></tr>
+    }
+</table>

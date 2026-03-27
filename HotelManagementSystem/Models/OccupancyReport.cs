@@ -1,6 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema; // 1. Add this
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HotelManagementSystem.Models
 {
@@ -8,11 +8,14 @@ namespace HotelManagementSystem.Models
     {
         [Key]
         public int ReportId { get; set; }
+
         public DateTime ReportDate { get; set; }
+
         public int TotalRooms { get; set; }
+
         public int OccupiedRooms { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")] // 2. Add this
+        [Column(TypeName = "decimal(18,2)")]
         public decimal RevenueGenerated { get; set; }
     }
 }
