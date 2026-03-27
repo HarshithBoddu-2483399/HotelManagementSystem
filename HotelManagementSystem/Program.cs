@@ -1,36 +1,29 @@
-using HotelManagementSystem.Data;
 using Microsoft.EntityFrameworkCore;
+using HotelManagementSystem.Data;
+using HotelManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add this to use Entity Framework Core and SQL Server
+// Database Connection
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+// Register All Separated Interfaces & Implementations
+builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IBillingService, BillingService>();
+builder.Services.AddScoped<IHousekeepingService, HousekeepingService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
+builder.Services.AddControllersWithViews();
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
-app.UseAuthorization();
-
-app.MapStaticAssets();
-
+// Set default page to Member 5's Dashboard
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
+    pattern: "{controller=Report}/{action=Index}/{id?}");
 
 app.Run();

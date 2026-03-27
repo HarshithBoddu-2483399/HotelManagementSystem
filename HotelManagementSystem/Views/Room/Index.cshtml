@@ -1,0 +1,10 @@
+﻿@model IEnumerable<HotelManagementSystem.Models.Room>
+<h2>Room Inventory</h2>
+<a href="/Room/Create" style="display:inline-block; padding:10px; background:#007bff; color:white; text-decoration:none; margin-bottom:15px;">+ Add Room</a>
+<table border="1" cellpadding="10" cellspacing="0" style="width:100%; text-align:left;">
+    <tr style="background:#ddd;"><th>Room #</th><th>Type</th><th>Rate</th><th>Status</th></tr>
+    @foreach (var r in Model)
+    {
+        <tr><td>@r.RoomNumber</td><td>@r.RoomType</td><td>$@r.RatePerNight</td><td>@r.Status</td></tr>
+    }
+</table>
