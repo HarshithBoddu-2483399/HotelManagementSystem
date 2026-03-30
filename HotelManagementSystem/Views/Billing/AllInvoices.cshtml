@@ -1,0 +1,42 @@
+@model IEnumerable<HotelManagementSystem.ViewModels.FinancialRecord>
+
+@{
+    ViewData["Title"] = "All Invoices";
+}
+
+<div class="container">
+    <h2>All Invoices</h2>
+    <div class="card mt-3 p-3">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Reservation #</th>
+                        <th>Guest</th>
+                        <th>Room</th>
+                        <th>Date</th>
+                        <th class="text-end">Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var i in Model)
+                    {
+                        <tr>
+                            <td>@i.InvoiceId</td>
+                            <td>@i.ReservationId</td>
+                            <td>@i.GuestName</td>
+                            <td>@i.RoomNumber</td>
+                            <td>@i.InvoiceDate.ToString("dd-MM-yyyy")</td>
+                            <td class="text-end text-success">@i.TotalAmount.ToString("C")</td>
+                            <td>
+                                <a class="btn btn-sm btn-info" href="/Billing/ViewInvoice?reservationId=@i.ReservationId">View Invoice</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

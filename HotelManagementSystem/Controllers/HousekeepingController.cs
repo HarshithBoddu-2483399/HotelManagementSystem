@@ -10,6 +10,9 @@ namespace HotelManagementSystem.Controllers
 
         public IActionResult Index() => View(_service.GetPendingTasks());
 
+        [HttpGet]
+        public IActionResult AllTasks() => View("AllTasks", _service.GetAllTasks());
+
         [HttpPost]
         public IActionResult MarkClean(int taskId)
         {

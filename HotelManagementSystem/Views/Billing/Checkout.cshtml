@@ -1,5 +1,14 @@
 ﻿@model HotelManagementSystem.Models.Invoice
-<h2>Checkout Successful</h2>
-<p>Invoice #: @Model.InvoiceId</p>
-<p>Total Paid: $@Model.TotalAmount</p>
-<a href="/Billing/Index">Back to Financials</a>
+
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<div class="container">
+    <div class="card p-4">
+        <h3>Checkout Successful</h3>
+        <p><strong>Invoice #:</strong> @Model.InvoiceId</p>
+        <p><strong>Total Paid:</strong> @Model.TotalAmount.ToString("C")</p>
+        <a class="btn btn-secondary" href="/Billing/Index">Back to Financials</a>
+    </div>
+</div>

@@ -1,0 +1,72 @@
+@model IEnumerable<HotelManagementSystem.Models.HousekeepingTask>
+
+@{
+    ViewData["Title"] = "All Housekeeping Tasks";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>All Housekeeping Tasks</h2>
+        <a href="/Housekeeping/Index" class="btn btn-primary">View Pending Tasks</a>
+    </div>
+
+    <div class="card mt-3 p-3">
+        <div class="table-responsive mt-3">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Task ID</th>
+                        <th>Room ID</th>
+                        <th>Assigned Staff ID</th>
+                        <th>Task Date</th>
+                        <th>Task Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in Model)
+                    {
+                        <tr>
+                            <td>@task.TaskId</td>
+                            <td>@task.RoomId</td>
+                            <td>@task.AssignedStaffId</td>
+                            <td>@task.TaskDate.ToShortDateString()</td>
+                            <td>
+                                @if (task.TaskStatus == "PENDING")
+                                {
+                                    <span class="badge bg-warning text-dark">@task.TaskStatus</span>
+                                }
+                                else if (task.TaskStatus == "COMPLETED")
+                                {
+                                    <span class="badge bg-success">@task.TaskStatus</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@task.TaskStatus</span>
+                                }
+                            </td>
+                            <td>
+                                @if (task.TaskStatus == "PENDING")
+                                {
+                                    <form action="/Housekeeping/MarkClean" method="post" style="display:inline-block;">
+                                        <input type="hidden" name="taskId" value="@task.TaskId" />
+                                        <button type="submit" class="btn btn-sm btn-success">Mark Clean</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Completed</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info mt-3">No tasks found.</div>
+        }
+    </div>
+</div>

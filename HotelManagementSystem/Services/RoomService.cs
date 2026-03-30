@@ -19,5 +19,32 @@ namespace HotelManagementSystem.Services
             _context.Rooms.Add(room);
             _context.SaveChanges();
         }
+
+        public Room GetRoomById(int roomId)
+        {
+            return _context.Rooms.Find(roomId);
+        }
+
+        public void UpdateRoom(Room updatedRoom)
+        {
+            var existingRoom = _context.Rooms.Find(updatedRoom.RoomId);
+            if (existingRoom != null)
+            {
+                existingRoom.RoomNumber = updatedRoom.RoomNumber;
+                existingRoom.RoomType = updatedRoom.RoomType;
+                existingRoom.RatePerNight = updatedRoom.RatePerNight;
+                _context.SaveChanges();
+            }
+        }
+
+        public void ToggleMaintenance(int roomId)
+        {
+            var room = _context.Rooms.Find(roomId);
+            if (room != null)
+            {
+                room.Status = room.Status == "MAINTENANCE" ? "AVAILABLE" : "MAINTENANCE";
+                _context.SaveChanges();
+            }
+        }
     }
 }

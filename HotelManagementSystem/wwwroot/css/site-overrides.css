@@ -1,0 +1,19 @@
+/* Simple site overrides to improve visuals */
+.navbar-custom { background: linear-gradient(90deg,#232526 0%,#414345 100%); padding:8px 18px; border-radius:6px; margin-bottom:18px; }
+.navbar-custom .navbar-brand { font-weight:800; color:#fff; margin-right:20px; }
+.navbar-custom .nav-link { color:rgba(255,255,255,0.9); margin-left:8px; margin-right:8px; }
+.navbar-custom .nav-link:hover { color:#ffd166; text-decoration:none; }
+.navbar-custom .nav-link.active { color:#ffd166; }
+.container-fluid.custom { max-width:1200px; }
+
+/* Improve spacing for dashboard cards */
+.card { border-radius:8px; }
+.card .card-body h3 { margin:0; }
+
+/* Ensure nav links are not displayed as default blue underlined links */
+.nav-link { text-decoration: none !important; }
+.nav-link:hover { text-decoration: none !important; }
+
+/* Slightly reduce navbar link padding for compact look */
+.navbar-custom .nav-link { padding: 8px 12px; border-radius: 6px; }
+.navbar-custom .nav-link:hover { background: rgba(255,255,255,0.04); }

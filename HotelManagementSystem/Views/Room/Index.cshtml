@@ -1,10 +1,53 @@
-﻿@model IEnumerable<HotelManagementSystem.Models.Room>
-<h2>Room Inventory</h2>
-<a href="/Room/Create" style="display:inline-block; padding:10px; background:#007bff; color:white; text-decoration:none; margin-bottom:15px;">+ Add Room</a>
-<table border="1" cellpadding="10" cellspacing="0" style="width:100%; text-align:left;">
-    <tr style="background:#ddd;"><th>Room #</th><th>Type</th><th>Rate</th><th>Status</th></tr>
-    @foreach (var r in Model)
-    {
-        <tr><td>@r.RoomNumber</td><td>@r.RoomType</td><td>$@r.RatePerNight</td><td>@r.Status</td></tr>
-    }
-</table>
+@model IEnumerable<HotelManagementSystem.Models.Room>
+
+@{
+    ViewData["Title"] = "Rooms";
+}
+
+<link rel="stylesheet" href="/css/rooms.css" />
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Rooms</h2>
+        <a href="/Room/Create" class="btn btn-primary">Add Room</a>
+    </div>
+
+    <div class="room-grid">
+        @{
+            var idx = 0;
+        }
+        @foreach (var room in Model ?? Enumerable.Empty<HotelManagementSystem.Models.Room>())
+        {
+            var bgClass = "bg-room-" + (idx % 6);
+            <div class="room-card @bgClass">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title">Room @room.RoomNumber</h5>
+                        @{
+                            var statusClass = "status-available";
+                            if(room.Status == "OCCUPIED") statusClass = "status-occupied";
+                            else if(room.Status == "MAINTENANCE") statusClass = "status-maintenance";
+                        }
+                        <span class="room-badge @statusClass">@room.Status</span>
+                    </div>
+
+                    <p><strong>Type:</strong> @room.RoomType</p>
+                    <p><strong>Rate:</strong> @room.RatePerNight.ToString("C")</p>
+                </div>
+                <div class="card-footer">
+                    <div>
+                        <a href="/Room/Edit?id=@room.RoomId" class="btn-room-action">Edit</a>
+                    </div>
+                    <div>
+                        <form asp-action="ToggleMaintenance" asp-controller="Room" method="post" style="display:inline-block;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@room.RoomId" />
+                            <button type="submit" class="btn-room-action">Toggle Maintenance</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            idx++;
+        }
+    </div>
+</div>

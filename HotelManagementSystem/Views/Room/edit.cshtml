@@ -1,0 +1,29 @@
+﻿@model HotelManagementSystem.Models.Room
+
+<h2>Edit Room Details</h2>
+<hr />
+
+<form action="/Room/Edit" method="post" style="max-width: 400px; display: flex; flex-direction: column; gap: 15px;">
+    <input type="hidden" name="RoomId" value="@Model.RoomId" />
+    
+    <div>
+        <label>Room Number:</label>
+        <input type="text" name="RoomNumber" value="@Model.RoomNumber" required style="width: 100%; padding: 8px;" />
+    </div>
+
+    <div>
+        <label>Room Type:</label>
+        <select name="RoomType" style="width: 100%; padding: 8px;">
+            <option value="SINGLE" selected="@(Model.RoomType == "SINGLE")">Single</option>
+            <option value="DOUBLE" selected="@(Model.RoomType == "DOUBLE")">Double</option>
+            <option value="SUITE" selected="@(Model.RoomType == "SUITE")">Suite</option>
+        </select>
+    </div>
+
+    <div>
+        <label>Rate Per Night ($):</label>
+        <input type="number" step="0.01" name="RatePerNight" value="@Model.RatePerNight" required style="width: 100%; padding: 8px;" />
+    </div>
+
+    <button type="submit" style="padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Save Changes</button>
+</form>

@@ -1,0 +1,16 @@
+@model HotelManagementSystem.Models.Invoice
+
+@{
+    ViewData["Title"] = "Receipt";
+}
+
+<h2>Receipt</h2>
+<div class="card" style="padding:20px; max-width:600px;">
+    <div><strong>Invoice ID:</strong> @Model.InvoiceId</div>
+    <div><strong>Reservation ID:</strong> @Model.ReservationId</div>
+    <div><strong>Invoice Date:</strong> @Model.InvoiceDate.ToString("g")</div>
+    <div><strong>Total Amount:</strong> @Model.TotalAmount.ToString("C")</div>
+    <div><strong>Payment Status:</strong> @Model.PaymentStatus</div>
+</div>
+
+<p style="margin-top:20px;"><a href="/Billing">Back to Billing</a></p>

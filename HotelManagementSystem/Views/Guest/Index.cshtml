@@ -1,0 +1,32 @@
+@model IEnumerable<HotelManagementSystem.Models.Guest>
+
+@{
+    ViewData["Title"] = "Guests";
+}
+
+<div class="container">
+    <h2>Guests</h2>
+    <div class="table-responsive mt-3">
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Guest ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var g in Model)
+                {
+                    <tr>
+                        <td>@g.GuestId</td>
+                        <td>@g.Name</td>
+                        <td>@g.Email</td>
+                        <td>@g.ContactInfo</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

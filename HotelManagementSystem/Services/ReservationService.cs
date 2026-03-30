@@ -33,6 +33,9 @@ namespace HotelManagementSystem.Services
 
             res.ReservationStatus = "BOOKED";
 
+            var room = _context.Rooms.Find(res.RoomId);
+            if (room != null) room.Status = "BOOKED";
+
             _context.Reservations.Add(res);
             _context.SaveChanges();
             return true;

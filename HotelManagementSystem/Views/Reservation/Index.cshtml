@@ -1,0 +1,36 @@
+@model IEnumerable<HotelManagementSystem.Models.Reservation>
+
+@{
+    ViewData["Title"] = "All Reservations";
+}
+
+<div class="container">
+    <h2>All Bookings</h2>
+    <div class="table-responsive mt-3">
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Reservation ID</th>
+                    <th>Guest ID</th>
+                    <th>Room</th>
+                    <th>Check-In</th>
+                    <th>Check-Out</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td>@r.ReservationId</td>
+                        <td>@r.GuestId</td>
+                        <td>@r.RoomId</td>
+                        <td>@r.CheckInDate.ToShortDateString()</td>
+                        <td>@r.CheckOutDate.ToShortDateString()</td>
+                        <td>@r.ReservationStatus</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

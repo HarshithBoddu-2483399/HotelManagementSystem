@@ -1,0 +1,41 @@
+﻿@model IEnumerable<HotelManagementSystem.Models.Room>
+
+<h2>Room Inventory & Management</h2>
+<hr />
+
+<a href="/Room/Create" style="display:inline-block; padding:10px 15px; background:#007bff; color:white; text-decoration:none; margin-bottom:20px; border-radius: 3px; font-weight: bold;">+ Add New Room</a>
+
+<table style="width:100%; text-align:left; border-collapse: collapse; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <tr style="background:#343a40; color: white;">
+        <th style="padding:12px; border: 1px solid #ddd;">Room #</th>
+        <th style="padding:12px; border: 1px solid #ddd;">Type</th>
+        <th style="padding:12px; border: 1px solid #ddd;">Rate</th>
+        <th style="padding:12px; border: 1px solid #ddd;">Status</th>
+        <th style="padding:12px; border: 1px solid #ddd;">Actions</th>
+    </tr>
+    
+    @foreach (var room in Model)
+    {
+        <tr style="border-bottom: 1px solid #ddd; background-color: white;">
+            <td style="padding:12px; border: 1px solid #ddd; font-weight: bold;">@room.RoomNumber</td>
+            <td style="padding:12px; border: 1px solid #ddd;">@room.RoomType</td>
+            <td style="padding:12px; border: 1px solid #ddd;">$@room.RatePerNight</td>
+            <td style="padding:12px; border: 1px solid #ddd; font-weight: bold;
+                color: @(room.Status == "AVAILABLE" ? "green" : room.Status == "MAINTENANCE" ? "red" : "orange");">
+                @room.Status
+            </td>
+            <td style="padding:12px; border: 1px solid #ddd; display: flex; gap: 10px; align-items: center;">
+                
+                <a href="/Room/Edit/@room.RoomId" style="background:#007bff; color:white; padding:6px 12px; text-decoration:none; border-radius:3px; font-size: 14px;">Edit</a>
+                
+                <form action="/Room/ToggleMaintenance" method="post" style="margin: 0;">
+                    <input type="hidden" name="id" value="@room.RoomId" />
+                    <button type="submit" style="background: @(room.Status == "MAINTENANCE" ? "#28a745" : "#ffc107"); color: @(room.Status == "MAINTENANCE" ? "white" : "black"); border:none; padding:6px 12px; border-radius:3px; font-size: 14px; cursor: pointer;">
+                        @(room.Status == "MAINTENANCE" ? "Mark Available" : "Set Maintenance")
+                    </button>
+                </form>
+
+            </td>
+        </tr>
+    }
+</table>

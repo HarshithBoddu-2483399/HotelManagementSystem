@@ -12,6 +12,8 @@ namespace HotelManagementSystem.Services
 
         public IEnumerable<HousekeepingTask> GetPendingTasks() => _context.HousekeepingTasks.Where(t => t.TaskStatus == "PENDING").ToList();
 
+        public IEnumerable<HousekeepingTask> GetAllTasks() => _context.HousekeepingTasks.OrderByDescending(t => t.TaskDate).ToList();
+
         public void MarkClean(int taskId)
         {
             var task = _context.HousekeepingTasks.Find(taskId);

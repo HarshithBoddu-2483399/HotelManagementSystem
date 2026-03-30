@@ -2,25 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Hotel Management System</title>
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/css/rooms.css" rel="stylesheet" />
+    <link href="/css/site-overrides.css" rel="stylesheet" />
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f8f9fa; }
-        .navbar { background-color: #343a40; padding: 15px; }
-        .navbar a { color: white; text-decoration: none; margin-right: 20px; font-weight: bold; }
-        .navbar a:hover { color: #17a2b8; }
-        .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f8; }
+        .container { padding: 28px; max-width: 1200px; margin: 0 auto; }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <a href="/Report/Index">Dashboard</a>
-        <a href="/Room/Index">Rooms</a>
-        <a href="/Reservation/Create">Bookings</a>
-        <a href="/Billing/Index">Financials</a>
-        <a href="/Housekeeping/Index">Housekeeping</a>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/Report/Index">HotelMS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/Report/Index">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/Room/Index">Rooms</a></li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="bookingsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Bookings</a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bookingsMenu">
+                            <li><a class="dropdown-item" href="/Reservation/Create">New Booking</a></li>
+                            <li><a class="dropdown-item" href="/Reservation/Index">All Bookings</a></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li><a class="dropdown-item" href="/Guest/Create">Register Guest</a></li>
+                            <li><a class="dropdown-item" href="/Guest/Index">All Guests</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="financeMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Financials</a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="financeMenu">
+                            <li><a class="dropdown-item" href="/Billing/Index">Billing</a></li>
+                            <li><a class="dropdown-item" href="/Billing/AllInvoices">All Invoices</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="housekeepingMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Housekeeping</a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="housekeepingMenu">
+                            <li><a class="dropdown-item" href="/Housekeeping/Index">Pending Tasks</a></li>
+                            <li><a class="dropdown-item" href="/Housekeeping/AllTasks">All Tasks</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="reportsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Reports</a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="reportsMenu">
+                            <li><a class="dropdown-item" href="/Report/OccupancyReport">Occupancy Report</a></li>
+                            <li><a class="dropdown-item" href="/Report/RevenueAnalysis">Revenue Analysis</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </nav>
     <div class="container">
         @RenderBody()
     </div>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

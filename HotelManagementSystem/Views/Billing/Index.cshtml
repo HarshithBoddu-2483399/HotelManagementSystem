@@ -1,64 +1,85 @@
-﻿@model IEnumerable<HotelManagementSystem.ViewModels.FinancialRecord>
+﻿@{
+    ViewData["Title"] = "Billing";
+}
 
-<h2>Front Desk: Booking Management</h2>
-<hr />
+<div class="container">
+    <h2>Front Desk: Booking & Financials</h2>
 
-<h3>Active & Upcoming Bookings</h3>
-<table style="width:100%; text-align:left; border-collapse: collapse; margin-bottom: 40px;">
-    <tr style="background:#007bff; color: white;">
-        <th style="padding:10px;">ID</th>
-        <th style="padding:10px;">Guest Name</th>
-        <th style="padding:10px;">Room</th>
-        <th style="padding:10px;">Dates</th>
-        <th style="padding:10px;">Status</th>
-        <th style="padding:10px;">Actions</th>
-    </tr>
-    @foreach(var b in ViewBag.ActiveBookings) { 
-        <tr style="border-bottom: 1px solid #ddd;">
-            <td style="padding:10px;">@b.ReservationId</td>
-            <td style="padding:10px;">@b.GuestName</td>
-            <td style="padding:10px;">@b.RoomNumber</td>
-            <td style="padding:10px;">@b.CheckIn.ToShortDateString() - @b.CheckOut.ToShortDateString()</td>
-            <td style="padding:10px; font-weight:bold; color: @(b.Status == "BOOKED" ? "orange" : "green");">@b.Status</td>
-            <td style="padding:10px; display: flex; gap: 5px;">
-                
-                @if(b.Status == "BOOKED") {
-                    <form action="/Billing/CheckIn" method="post">
-                        <input type="hidden" name="reservationId" value="@b.ReservationId" />
-                        <button type="submit" style="background:#28a745; color:white; border:none; padding:5px 10px; border-radius:3px;">Check-In</button>
-                    </form>
-                    <form action="/Billing/Cancel" method="post">
-                        <input type="hidden" name="reservationId" value="@b.ReservationId" />
-                        <button type="submit" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:3px;">Cancel</button>
-                    </form>
-                }
-                @if(b.Status == "COMPLETED") {
-                    <form action="/Billing/Checkout" method="post">
-                        <input type="hidden" name="reservationId" value="@b.ReservationId" />
-                        <button type="submit" style="background:#17a2b8; color:white; border:none; padding:5px 10px; border-radius:3px;">Generate Bill & Checkout</button>
-                    </form>
-                }
-            </td>
-        </tr> 
-    }
-</table>
-
-<h3>Financials: Paid Invoices</h3>
-<table style="width:100%; text-align:left; border-collapse: collapse;">
-    <tr style="background:#343a40; color: white;">
-        <th style="padding:10px;">Invoice #</th>
-        <th style="padding:10px;">Guest Name</th>
-        <th style="padding:10px;">Room</th>
-        <th style="padding:10px;">Date Paid</th>
-        <th style="padding:10px;">Revenue</th>
-    </tr>
-    @foreach(var i in Model) { 
-        <tr style="border-bottom: 1px solid #ddd;">
-            <td style="padding:10px;">@i.InvoiceId</td>
-            <td style="padding:10px;">@i.GuestName</td>
-            <td style="padding:10px;">@i.RoomNumber</td>
-            <td style="padding:10px;">@i.InvoiceDate.ToShortDateString()</td>
-            <td style="padding:10px; color:green; font-weight:bold;">$@i.TotalAmount</td>
-        </tr> 
-    }
-</table>
+    <div class="card mt-3 p-3">
+        <h5>Active & Upcoming Bookings</h5>
+        <div class="table-responsive mt-3">
+            <table class="table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Reservation #</th>
+                        <th>Guest</th>
+                        <th>Customer ID</th>
+                        <th>Room</th>
+                        <th>Dates</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in ViewBag.ActiveBookings)
+                    {
+                        <tr>
+                            <td>@b.ReservationId</td>
+                            <td>@b.GuestName</td>
+                            <td>@b.GuestId</td>
+                            <td>@b.RoomNumber</td>
+                            <td>@b.CheckIn.ToShortDateString() - @b.CheckOut.ToShortDateString()</td>
+                            <td>@b.Status</td>
+                            <td>
+                                @if (b.Status == "BOOKED")
+                                {
+                                    <form style="display:inline-block; margin-right:6px;" action="/Billing/CheckIn" method="post">
+                                        <input type="hidden" name="reservationId" value="@b.ReservationId" />
+                                        <button class="btn btn-sm btn-success" type="submit">Check-In</button>
+                                    </form>
+                                    <form style="display:inline-block;" action="/Billing/Cancel" method="post">
+                                        <input type="hidden" name="reservationId" value="@b.ReservationId" />
+                                        <button class="btn btn-sm btn-danger" type="submit">Cancel</button>
+                                    </form>
+                                }
+                                else if (b.Status == "CHECKED_IN")
+                                {
+                                    <form action="/Billing/CheckOut" method="post" style="display:inline-block; margin-right:6px;">
+                                        <input type="hidden" name="reservationId" value="@b.ReservationId" />
+                                        <button class="btn btn-sm btn-warning" type="submit">Check-Out</button>
+                                    </form>
+                                }
+                                else if (b.Status == "CHECKED_OUT")
+                                {
+                                    <form action="/Billing/GenerateInvoice" method="post" style="display:inline-block; margin-right:6px;">
+                                        <input type="hidden" name="reservationId" value="@b.ReservationId" />
+                                        <button class="btn btn-sm btn-primary" type="submit">Generate Invoice</button>
+                                    </form>
+                                }
+                                else if (b.Status == "INVOICED")
+                                {
+                                    <span class="badge bg-info">Invoice Generated</span>
+                                }
+                                @if (b.InvoiceId != null)
+                                {
+                                    if (b.InvoicePaid == true)
+                                    {
+                                        <a class="btn btn-sm btn-info" href="/Billing/ViewInvoice?reservationId=@b.ReservationId">View Invoice</a>
+                                    }
+                                    else
+                                    {
+                                        <form action="/Billing/MarkPaid" method="post" style="display:inline-block; margin-right:6px;">
+                                            <input type="hidden" name="invoiceId" value="@b.InvoiceId" />
+                                            <button class="btn btn-sm btn-success" type="submit">Mark Paid</button>
+                                        </form>
+                                        <a class="btn btn-sm btn-secondary" href="/Billing/ViewInvoice?reservationId=@b.ReservationId">View Invoice</a>
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

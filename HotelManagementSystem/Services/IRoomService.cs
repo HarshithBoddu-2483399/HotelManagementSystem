@@ -8,5 +8,9 @@ namespace HotelManagementSystem.Services
         IEnumerable<Room> GetAllRooms();
         IEnumerable<Room> GetAvailableRooms();
         void AddRoom(Room room);
+
+        Room GetRoomById(int roomId);
+        void UpdateRoom(Room updatedRoom);
+        void ToggleMaintenance(int roomId);
     }
 }

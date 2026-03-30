@@ -6,7 +6,7 @@ namespace HotelManagementSystem.Controllers
     public class BillingController : Controller
     {
         private readonly IBillingService _billingService;
-        private readonly IReservationService _resService; // Added to handle cancellations
+        private readonly IReservationService _resService;
 
         public BillingController(IBillingService billingService, IReservationService resService)
         {
@@ -14,12 +14,18 @@ namespace HotelManagementSystem.Controllers
             _resService = resService;
         }
 
-        // The Ultimate Management View
         public IActionResult Index()
         {
+            
             ViewBag.ActiveBookings = _billingService.GetActiveBookings();
-            var invoices = _billingService.GetPaidInvoices();
-            return View(invoices);
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult AllInvoices()
+        {
+            var invoices = _billingService.GetAllInvoices();
+            return View("AllInvoices", invoices);
         }
 
         [HttpPost]
@@ -30,18 +36,39 @@ namespace HotelManagementSystem.Controllers
         }
 
         [HttpPost]
-        public IActionResult Cancel(int reservationId)
+        public IActionResult CheckOut(int reservationId)
         {
-            _resService.CancelReservation(reservationId);
+            _billingService.CheckOutGuest(reservationId);
             return RedirectToAction("Index");
         }
 
         [HttpPost]
-        public IActionResult Checkout(int reservationId)
+        public IActionResult GenerateInvoice(int reservationId)
         {
-            var invoice = _billingService.ProcessCheckout(reservationId);
-            if (invoice == null) return RedirectToAction("Index"); // Already billed
+            var inv = _billingService.GenerateInvoice(reservationId);
+            
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public IActionResult ViewInvoice(int reservationId)
+        {
+            var invoice = _billingService.GetInvoiceByReservation(reservationId);
             return View("Receipt", invoice);
+        }
+
+        [HttpPost]
+        public IActionResult MarkPaid(int invoiceId)
+        {
+            _billingService.MarkInvoicePaid(invoiceId);
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public IActionResult Cancel(int reservationId)
+        {
+            _resService.CancelReservation(reservationId);
+            return RedirectToAction("Index");
         }
     }
 }
