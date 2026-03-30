@@ -14,8 +14,10 @@ namespace HotelManagementSystem.Services
             return new DashboardViewModel
             {
                 TotalRevenue = _context.Invoices.Where(i => i.PaymentStatus == "PAID").Sum(i => i.TotalAmount),
+                PendingTasks = _context.HousekeepingTasks.Count(t => t.TaskStatus == "PENDING"),
                 RoomsAvailable = _context.Rooms.Count(r => r.Status == "AVAILABLE"),
-                PendingTasks = _context.HousekeepingTasks.Count(t => t.TaskStatus == "PENDING")
+                RoomsOccupied = _context.Rooms.Count(r => r.Status == "OCCUPIED"),
+                RoomsMaintenance = _context.Rooms.Count(r => r.Status == "MAINTENANCE")
             };
         }
     }
