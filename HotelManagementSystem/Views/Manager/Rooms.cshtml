@@ -1,0 +1,51 @@
+﻿@model IEnumerable<HotelManagementSystem.Models.Room>
+
+@{
+    ViewData["Title"] = "Manager - Room Inventory";
+}
+
+<link rel="stylesheet" href="/css/rooms.css" />
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Rooms Inventory</h2>
+        <a asp-controller="Manager" asp-action="Index" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="room-grid">
+        @{
+            var idx = 0;
+        }
+        @foreach (var room in Model ?? Enumerable.Empty<HotelManagementSystem.Models.Room>())
+        {
+            var bgClass = "bg-room-" + (idx % 6);
+            <div class="room-card @bgClass">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title">Room @room.RoomNumber</h5>
+                        @{
+                            var statusClass = "status-available";
+                            if (room.Status == "OCCUPIED") statusClass = "status-occupied";
+                            else if (room.Status == "MAINTENANCE") statusClass = "status-maintenance";
+                            else if (room.Status == "BOOKED") statusClass = "status-occupied"; // Handles booked status visually
+                        }
+                        <span class="room-badge @statusClass">@room.Status</span>
+                    </div>
+
+                    <p><strong>Type:</strong> @room.RoomType</p>
+                    <p><strong>Rate:</strong> @room.RatePerNight.ToString("C")</p>
+                </div>
+                <div class="card-footer">
+                    <div style="width: 100%;">
+                        <form asp-action="ToggleMaintenance" asp-controller="Manager" method="post" style="display:block; width:100%;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="roomId" value="@room.RoomId" />
+                            <button type="submit" class="btn-room-action" style="width: 100%;">Toggle Maintenance</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            idx++;
+        }
+    </div>
+</div>

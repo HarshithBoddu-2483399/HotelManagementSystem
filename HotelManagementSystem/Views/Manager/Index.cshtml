@@ -1,0 +1,83 @@
+﻿@model HotelManagementSystem.ViewModels.ManagerDashboardViewModel
+
+@{
+    ViewData["Title"] = "Manager Dashboard";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Managerial Overview</h2>
+        <span class="badge bg-primary px-3 py-2">Manager Access</span>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card bg-success text-white p-3 shadow-sm border-0 h-100">
+                <small class="text-uppercase">Total Revenue</small>
+                <h3 class="fw-bold">@Model.TotalRevenue.ToString("C")</h3>
+                <a asp-controller="Report" asp-action="RevenueAnalysis" class="btn btn-sm btn-light mt-auto">Detailed Analysis</a>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-info text-white p-3 shadow-sm border-0 h-100">
+                <small class="text-uppercase">Occupancy</small>
+                <h3 class="fw-bold">@Model.OccupiedRooms / @(Model.OccupiedRooms + Model.AvailableRooms)</h3>
+                <a asp-action="Rooms" class="btn btn-sm btn-light mt-auto">Manage Inventory</a>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark p-3 shadow-sm border-0 h-100">
+                <small class="text-uppercase">Pending Cleaning</small>
+                <h3 class="fw-bold">@Model.PendingCleaningTasks</h3>
+                <a asp-action="Housekeeping" class="btn btn-sm btn-dark mt-auto">Assign Staff</a>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-secondary text-white p-3 shadow-sm border-0 h-100">
+                <small class="text-uppercase">Transactions</small>
+                <h3 class="fw-bold">@Model.RecentInvoices.Count</h3>
+                <a asp-controller="Billing" asp-action="AllInvoices" class="btn btn-sm btn-light mt-auto">All Invoices</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold">Latest 10 Transactions</div>
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var inv in Model.RecentInvoices)
+                        {
+                            <tr>
+                                <td>@inv.InvoiceDate.ToShortDateString()</td>
+                                <td>@inv.TotalAmount.ToString("C")</td>
+                                <td><span class="badge bg-success">@inv.PaymentStatus</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white fw-bold">Quick Links</div>
+                <div class="list-group list-group-flush">
+                    <a asp-action="Rooms" class="list-group-item list-group-item-action">Room Status & Maintenance</a>
+                    <a asp-action="Housekeeping" class="list-group-item list-group-item-action">Staff Assignments</a>
+                    <a asp-controller="Report" asp-action="OccupancyReport" class="list-group-item list-group-item-action">View Occupancy Trends</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

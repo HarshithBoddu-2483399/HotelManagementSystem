@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using HotelManagementSystem.Models;
 using HotelManagementSystem.Services;
-using HotelManagementSystem.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HotelManagementSystem.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class RoomController : Controller
     {
         private readonly IRoomService _roomService;
@@ -16,7 +18,7 @@ namespace HotelManagementSystem.Controllers
         public IActionResult Index()
         {
             var rooms = _roomService.GetAllRooms();
-            return View(rooms); 
+            return View(rooms);
         }
 
         [HttpGet]

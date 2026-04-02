@@ -10,52 +10,106 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f8; }
         .container { padding: 28px; max-width: 1200px; margin: 0 auto; }
+        .navbar-custom { background-color: #2c3e50; } /* Example color to match your CSS */
+        .user-name { color: #ecf0f1; font-size: 0.9rem; margin-right: 15px; }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/Report/Index">HotelMS</a>
+            @* The Brand link now routes based on Role *@
+            @if (User.IsInRole("Admin"))
+            {
+                <a class="navbar-brand" asp-controller="Report" asp-action="Index">HotelMS (Admin)</a>
+            }
+            else if (User.IsInRole("Manager"))
+            {
+                <a class="navbar-brand" asp-controller="Manager" asp-action="Index">HotelMS (Manager)</a>
+            }
+            else
+            {
+                <a class="navbar-brand" href="/">HotelMS</a>
+            }
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="/Report/Index">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/Room/Index">Rooms</a></li>
+                    
+                    @* --- ADMIN ONLY MENU --- *@
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Report" asp-action="Index">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Room" asp-action="Index">Rooms</a></li>
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="bookingsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Bookings</a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bookingsMenu">
-                            <li><a class="dropdown-item" href="/Reservation/Create">New Booking</a></li>
-                            <li><a class="dropdown-item" href="/Reservation/Index">All Bookings</a></li>
-                            <li><hr class="dropdown-divider" /></li>
-                            <li><a class="dropdown-item" href="/Guest/Create">Register Guest</a></li>
-                            <li><a class="dropdown-item" href="/Guest/Index">All Guests</a></li>
-                        </ul>
-                    </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="bookingsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Bookings</a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bookingsMenu">
+                                <li><a class="dropdown-item" asp-controller="Reservation" asp-action="Create">New Booking</a></li>
+                                <li><a class="dropdown-item" asp-controller="Reservation" asp-action="Index">All Bookings</a></li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li><a class="dropdown-item" asp-controller="Guest" asp-action="Create">Register Guest</a></li>
+                                <li><a class="dropdown-item" asp-controller="Guest" asp-action="Index">All Guests</a></li>
+                            </ul>
+                        </li>
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="financeMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Financials</a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="financeMenu">
-                            <li><a class="dropdown-item" href="/Billing/Index">Billing</a></li>
-                            <li><a class="dropdown-item" href="/Billing/AllInvoices">All Invoices</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="housekeepingMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Housekeeping</a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="housekeepingMenu">
-                            <li><a class="dropdown-item" href="/Housekeeping/Index">Pending Tasks</a></li>
-                            <li><a class="dropdown-item" href="/Housekeeping/AllTasks">All Tasks</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="reportsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Reports</a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="reportsMenu">
-                            <li><a class="dropdown-item" href="/Report/OccupancyReport">Occupancy Report</a></li>
-                            <li><a class="dropdown-item" href="/Report/RevenueAnalysis">Revenue Analysis</a></li>
-                        </ul>
-                    </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="financeMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Financials</a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="financeMenu">
+                                <li><a class="dropdown-item" asp-controller="Billing" asp-action="Index">Billing</a></li>
+                                <li><a class="dropdown-item" asp-controller="Billing" asp-action="AllInvoices">All Invoices</a></li>
+                            </ul>
+                        </li>
+                    }
+
+                    @* --- MANAGER ONLY MENU --- *@
+                    @if (User.IsInRole("Manager"))
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Manager" asp-action="Index">Manager Overview</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Manager" asp-action="Rooms">Rooms</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Manager" asp-action="Housekeeping">Assignments</a></li>
+                    }
+
+                    @* --- SHARED / HOUSEKEEPING MENU --- *@
+                    @if (User.IsInRole("Admin") || User.IsInRole("Housekeeping"))
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="housekeepingMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Housekeeping</a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="housekeepingMenu">
+                                <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="Index">Pending Tasks</a></li>
+                                <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="AllTasks">All Tasks</a></li>
+                            </ul>
+                        </li>
+                    }
+
+                    @* --- REPORTS (Admin and Manager) --- *@
+                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="reportsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Reports</a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="reportsMenu">
+                                <li><a class="dropdown-item" asp-controller="Report" asp-action="OccupancyReport">Occupancy Report</a></li>
+                                <li><a class="dropdown-item" asp-controller="Report" asp-action="RevenueAnalysis">Revenue Analysis</a></li>
+                            </ul>
+                        </li>
+                    }
+
+                    @* --- AUTHENTICATION LINKS --- *@
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item ms-lg-3">
+                            <span class="user-name">Hi, @User.Identity.Name</span>
+                            <a class="btn btn-outline-danger btn-sm" asp-controller="Account" asp-action="Logout">Logout</a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
+                        </li>
+                    }
                 </ul>
             </div>
         </div>

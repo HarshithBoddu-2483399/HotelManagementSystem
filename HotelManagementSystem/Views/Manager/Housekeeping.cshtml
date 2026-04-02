@@ -1,0 +1,44 @@
+﻿@model HotelManagementSystem.ViewModels.ManagerDashboardViewModel
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Housekeeping Staff Assignment</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <table class="table align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Room Number</th>
+                    <th>Status</th>
+                    <th>Current Staff ID</th>
+                    <th>Assign Staff</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var task in Model.PendingTasksList)
+                {
+                    <tr>
+                        <td>Room @task.RoomId</td>
+                        <td><span class="badge bg-warning text-dark">@task.TaskStatus</span></td>
+                        <td>@(task.AssignedStaffId == 0 ? "Not Assigned" : task.AssignedStaffId.ToString())</td>
+                        <td>
+                            <form asp-action="AssignStaff" method="post" class="d-flex gap-2">
+                                <input type="hidden" name="taskId" value="@task.TaskId" />
+                                <select name="staffId" class="form-select form-select-sm" required>
+                                    <option value="">Select Staff...</option>
+                                    @foreach (var staff in Model.AvailableStaff)
+                                    {
+                                        <option value="@staff.UserId">@staff.Username</option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Assign</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

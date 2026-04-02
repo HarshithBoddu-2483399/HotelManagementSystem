@@ -7,7 +7,14 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Occupancy Report</h2>
-        <a href="/Report/Index" class="btn btn-secondary">Back to Dashboard</a>
+        @if (User.IsInRole("Manager"))
+        {
+            <a href="/Manager/Index" class="btn btn-outline-secondary">Back to Dashboard</a>
+        }
+        else
+        {
+            <a href="/Report/Index" class="btn btn-outline-secondary">Back to Dashboard</a>
+        }
     </div>
 
     <!-- Date Selector -->

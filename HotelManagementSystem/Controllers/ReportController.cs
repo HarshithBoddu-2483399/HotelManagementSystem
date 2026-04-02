@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using HotelManagementSystem.Services;
 using System;
 
 namespace HotelManagementSystem.Controllers
 {
+    [Authorize(Roles = "Admin,Manager")]
     public class ReportController : Controller
     {
         private readonly IReportService _reportService;
@@ -15,6 +17,12 @@ namespace HotelManagementSystem.Controllers
 
         public IActionResult Index()
         {
+            // If a Manager accidentally hits /Report/Index, redirect them to their portal
+            if (User.IsInRole("Manager"))
+            {
+                return RedirectToAction("Index", "Manager");
+            }
+
             var dashboardData = _reportService.GetMetrics();
             return View(dashboardData);
         }
