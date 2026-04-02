@@ -4,28 +4,140 @@
     ViewData["Title"] = "Register Guest";
 }
 
-<div class="container">
+<div class="container mt-4">
     <h2>Register New Guest</h2>
+
     @if (ViewBag.Error != null)
     {
         <div class="alert alert-danger">@ViewBag.Error</div>
     }
 
-    <form method="post" action="/Guest/Create" class="row g-3 mt-2">
-        <div class="col-md-4">
-            <label class="form-label">Name</label>
-            <input class="form-control" name="Name" required />
+    <form action="/Guest/Create" method="post" class="row g-3 mt-2" id="guestForm">
+        
+        <div class="col-md-6">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="guestPhone" class="form-control" name="ContactInfo"
+                   value="@Model?.ContactInfo"
+                   required
+                   pattern="\d{10}"
+                   maxlength="10"
+                   placeholder="10-digit Mobile Number"
+                   autocomplete="off"
+                   oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
         </div>
-        <div class="col-md-4">
-            <label class="form-label">Email</label>
-            <input class="form-control" name="Email" type="email" required />
+
+        <div class="col-md-6">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="guestEmail" class="form-control" name="Email"
+                   required
+                   placeholder="Email Address"
+                   autocomplete="off"
+                   pattern="[a-z0-9._%+-]+&#64;[a-z0-9.-]+\.[a-z]{2,}$" />
         </div>
-        <div class="col-md-4">
-            <label class="form-label">Contact</label>
-            <input class="form-control" name="ContactInfo" />
+
+        <div class="col-md-6">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="guestName" class="form-control" name="Name" required placeholder="Guest Name" />
         </div>
-        <div class="col-12 mt-2">
-            <button class="btn btn-primary" type="submit">Register Guest</button>
+
+        <div class="col-12 mt-4">
+            <button type="submit" id="submitBtn" class="btn btn-success">Register Guest</button>
+            <a href="/Reservation/Create" class="btn btn-secondary ms-2">Back to Booking</a>
         </div>
     </form>
+
+    <div id="existingGuestCard" class="card border-info mt-4" style="display:none; max-width: 600px;">
+        <div class="card-header bg-info text-white">
+            <strong>Notice:</strong> This guest is already registered!
+        </div>
+        <div class="card-body bg-light">
+            <p class="mb-1"><strong>Existing Name:</strong> <span id="extName"></span></p>
+            <p class="mb-1"><strong>Existing Email:</strong> <span id="extEmail"></span></p>
+            <p class="mb-0"><strong>Existing Phone:</strong> <span id="extPhone"></span></p>
+        </div>
+    </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const phoneInput = document.getElementById('guestPhone');
+        const emailInput = document.getElementById('guestEmail');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        const existingCard = document.getElementById('existingGuestCard');
+        const extName = document.getElementById('extName');
+        const extEmail = document.getElementById('extEmail');
+        const extPhone = document.getElementById('extPhone');
+
+        let phoneTimeout = null;
+        let emailTimeout = null;
+
+        function checkExistingUser(data) {
+            if (data && data.phone) {
+                existingCard.style.display = 'block';
+                extName.textContent = data.name;
+                extEmail.textContent = data.email;
+                extPhone.textContent = data.phone;
+                
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Guest Already Registered';
+                submitBtn.classList.replace('btn-success', 'btn-secondary');
+            } else {
+                existingCard.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register Guest';
+                submitBtn.classList.replace('btn-secondary', 'btn-success');
+            }
+        }
+
+        function lookupPhone(phone) {
+            fetch('/Guest/FindByPhone?phone=' + encodeURIComponent(phone))
+                .then(res => res.status === 200 ? res.json() : [])
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        const match = data.find(g => g.phone === phone);
+                        checkExistingUser(match);
+                    } else {
+                        checkExistingUser(null);
+                    }
+                })
+                .catch(() => checkExistingUser(null));
+        }
+
+        function lookupEmail(email) {
+            fetch('/Guest/FindByEmail?email=' + encodeURIComponent(email))
+                .then(res => res.status === 200 ? res.json() : null)
+                .then(data => checkExistingUser(data))
+                .catch(() => checkExistingUser(null));
+        }
+
+        phoneInput.addEventListener('input', function () {
+            clearTimeout(phoneTimeout);
+            const val = this.value.trim();
+            if (val.length === 10) {
+                phoneTimeout = setTimeout(() => lookupPhone(val), 300);
+            } else {
+                checkExistingUser(null);
+            }
+        });
+
+        emailInput.addEventListener('input', function () {
+            clearTimeout(emailTimeout);
+            const val = this.value.trim();
+            
+            if (val.includes(String.fromCharCode(64)) && val.includes('.')) {
+                emailTimeout = setTimeout(() => lookupEmail(val), 400);
+            } else {
+                if (phoneInput.value.length === 10) {
+                    lookupPhone(phoneInput.value);
+                } else {
+                    checkExistingUser(null);
+                }
+            }
+        });
+
+        if (phoneInput.value.length === 10) {
+            lookupPhone(phoneInput.value);
+        }
+    });
+</script>

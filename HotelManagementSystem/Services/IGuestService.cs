@@ -7,6 +7,9 @@ namespace HotelManagementSystem.Services
     {
         IEnumerable<Guest> GetAllGuests();
         Guest GetGuestById(int id);
-        void CreateGuest(Guest guest);
+
+        (bool IsSuccess, string ErrorMessage) CreateGuest(Guest guest);
+        IEnumerable<Guest> FindByPhone(string phone);
+        Guest FindByEmail(string email);
     }
 }

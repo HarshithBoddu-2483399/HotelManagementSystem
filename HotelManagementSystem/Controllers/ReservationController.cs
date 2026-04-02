@@ -40,7 +40,7 @@ namespace HotelManagementSystem.Controllers
                 ViewBag.Rooms = _roomService.GetAvailableRooms();
                 return View();
             }
-            // After creating a reservation, redirect to Billing so the new booking appears in Active/Upcoming immediately
+           
             return RedirectToAction("Index", "Billing");
         }
     }

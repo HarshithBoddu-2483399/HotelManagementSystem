@@ -44,11 +44,18 @@ namespace HotelManagementSystem.Services
         public void CancelReservation(int reservationId)
         {
             var res = _context.Reservations.Find(reservationId);
-            if (res != null)
+
+            if (res != null && res.ReservationStatus == "BOOKED")
             {
                 res.ReservationStatus = "CANCELLED";
+
                 var room = _context.Rooms.Find(res.RoomId);
-                if (room != null && room.Status == "OCCUPIED") room.Status = "AVAILABLE";
+
+                if (room != null && room.Status == "BOOKED")
+                {
+                    room.Status = "AVAILABLE";
+                }
+
                 _context.SaveChanges();
             }
         }

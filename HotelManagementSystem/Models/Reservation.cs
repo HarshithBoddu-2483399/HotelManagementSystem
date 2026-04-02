@@ -10,6 +10,6 @@ namespace HotelManagementSystem.Models
         public int RoomId { get; set; }
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
-        public string ReservationStatus { get; set; }
+        public string? ReservationStatus { get; set; }
     }
 }

@@ -11,40 +11,251 @@
     }
 
     <form action="/Reservation/Create" method="post" class="row g-3">
+        
+        <div class="col-md-4 position-relative">
+            <label class="form-label">Phone</label>
+            <input id="guestPhone"
+                   class="form-control"
+                   type="tel"
+                   name="guest.ContactInfo"
+                   placeholder="10-digit Mobile Number"
+                   autocomplete="off"
+                   required
+                   pattern="\d{10}"
+                   maxlength="10"
+                   oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+            
+            <div id="phoneSuggestions" class="list-group position-absolute shadow" style="z-index:1050; width:100%; display:none; max-height:200px; overflow:auto; top: 100%;"></div>
+            
+            <div id="registerPrompt" class="form-text text-danger mt-1" style="display:none; font-weight: 500;">
+                Guest not found. <a id="registerLink" href="/Guest/Create" target="_blank" class="text-decoration-underline">Register new guest</a>
+            </div>
+        </div>
+
         <div class="col-md-4">
             <label class="form-label">Guest Name</label>
-            <input class="form-control" type="text" name="guest.Name" placeholder="Guest Name" required />
+            <input id="guestName" class="form-control" type="text" name="guest.Name" placeholder="Guest Name" required />
         </div>
+
         <div class="col-md-4">
             <label class="form-label">Email</label>
-            <input class="form-control" type="email" name="guest.Email" placeholder="Email" required />
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Phone</label>
-            <input class="form-control" type="text" name="guest.ContactInfo" placeholder="Phone" required />
+            <input id="guestEmail"
+                   class="form-control"
+                   type="email"
+                   name="guest.Email"
+                   placeholder="Email Address"
+                   required
+                   pattern="[a-z0-9._%+-]+&#64;[a-z0-9.-]+\.[a-z]{2,}$" />
         </div>
 
         <div class="col-md-6">
             <label class="form-label">Room</label>
-            <select class="form-select" name="reservation.RoomId">
-                @foreach (var room in ViewBag.Rooms)
+            <select id="roomSelect" class="form-select" name="reservation.RoomId">
+                @if (ViewBag.Rooms != null)
                 {
-                    <option value="@room.RoomId">Room @room.RoomNumber (@room.RoomType) - @room.RatePerNight.ToString("C")</option>
+                    foreach (var room in ViewBag.Rooms)
+                    {
+                        <option value="@room.RoomId" data-rate="@room.RatePerNight">
+                            Room @room.RoomNumber (@room.RoomType) - ₹@room.RatePerNight
+                        </option>
+                    }
                 }
             </select>
         </div>
 
         <div class="col-md-3">
             <label class="form-label">Check-In</label>
-            <input class="form-control" type="date" name="reservation.CheckInDate" required />
+            <input id="checkIn" class="form-control" type="date" name="reservation.CheckInDate" required />
         </div>
+
         <div class="col-md-3">
             <label class="form-label">Check-Out</label>
-            <input class="form-control" type="date" name="reservation.CheckOutDate" required />
+            <input id="checkOut" class="form-control" type="date" name="reservation.CheckOutDate" required />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Total Amount</label>
+            <input id="totalPrice" class="form-control" type="text" readonly placeholder="₹0.00" />
+            <small id="dateError" class="text-danger mt-1" style="display:none; font-weight:500;">Check-Out must be after Check-In.</small>
         </div>
 
         <div class="col-12">
-            <button class="btn btn-primary" type="submit">Book Now</button>
+            <button id="bookBtn" class="btn btn-primary" type="submit" disabled>Book Now</button>
         </div>
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const phoneInput = document.getElementById('guestPhone');
+        const nameInput = document.getElementById('guestName');
+        const emailInput = document.getElementById('guestEmail');
+        const suggestionsEl = document.getElementById('phoneSuggestions');
+        
+        const registerPrompt = document.getElementById('registerPrompt');
+        const registerLink = document.getElementById('registerLink');
+        
+        const checkInEl = document.getElementById('checkIn');
+        const checkOutEl = document.getElementById('checkOut');
+        const roomSelect = document.getElementById('roomSelect');
+        const totalEl = document.getElementById('totalPrice');
+        const bookBtn = document.getElementById('bookBtn');
+        const dateError = document.getElementById('dateError');
+
+        let timeout = null;
+
+       
+        const today = new Date().toISOString().split('T')[0];
+        checkInEl.min = today;
+
+        checkInEl.addEventListener('change', function() {
+            if (this.value) {
+                const minOutDate = new Date(this.value);
+                minOutDate.setDate(minOutDate.getDate() + 1);
+                const minOutString = minOutDate.toISOString().split('T')[0];
+                checkOutEl.min = minOutString;
+                
+                
+                if (checkOutEl.value && checkOutEl.value < minOutString) {
+                    checkOutEl.value = '';
+                }
+            }
+        });
+
+
+        function lookup(phone) {
+            if (!phone) return;
+            fetch('/Guest/FindByPhone?phone=' + encodeURIComponent(phone))
+                .then(res => res.status === 200 ? res.json() : [])
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        registerPrompt.style.display = 'none';
+                        
+                        if (data.length === 1 && data[0].phone === phone) {
+                            const item = data[0];
+                            nameInput.value = item.name || '';
+                            emailInput.value = item.email || '';
+                            hideSuggestions();
+                            calculateTotal();
+                            return;
+                        }
+                        renderSuggestions(data);
+                    } else {
+                        hideSuggestions();
+                        nameInput.value = '';
+                        emailInput.value = '';
+                        
+                        if (phone.length === 10) {
+                            registerLink.href = '/Guest/Create?phone=' + encodeURIComponent(phone);
+                            registerPrompt.style.display = 'block';
+                        }
+                    }
+                })
+                .catch(() => {
+                    hideSuggestions();
+                    if (phone.length === 10) {
+                        registerLink.href = '/Guest/Create?phone=' + encodeURIComponent(phone);
+                        registerPrompt.style.display = 'block';
+                    }
+                });
+        }
+
+        phoneInput.addEventListener('input', function () {
+            clearTimeout(timeout);
+            const val = this.value.trim();
+            
+            registerPrompt.style.display = 'none';
+            
+            if (!val) {
+                hideSuggestions();
+                return;
+            }
+            
+            timeout = setTimeout(() => lookup(val), 300);
+        });
+
+        phoneInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = this.value.trim();
+                if (val.length === 10) {
+                    lookup(val);
+                } else {
+                    this.reportValidity();
+                }
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!phoneInput.contains(e.target) && !suggestionsEl.contains(e.target)) {
+                hideSuggestions();
+            }
+        });
+
+        function renderSuggestions(list) {
+            suggestionsEl.innerHTML = '';
+            if (!list || list.length === 0) { hideSuggestions(); return; }
+            
+            list.forEach(item => {
+                const el = document.createElement('button');
+                el.type = 'button';
+                el.className = 'list-group-item list-group-item-action text-start';
+                
+                el.innerHTML = `<strong>${item.phone}</strong> <span class="text-muted ms-2">— ${item.name || ''}</span>`;
+                
+                el.addEventListener('click', function () {
+                    phoneInput.value = item.phone;
+                    nameInput.value = item.name || '';
+                    emailInput.value = item.email || '';
+                    hideSuggestions();
+                    calculateTotal();
+                });
+                suggestionsEl.appendChild(el);
+            });
+            suggestionsEl.style.display = 'block';
+        }
+
+        function hideSuggestions() {
+            suggestionsEl.style.display = 'none';
+        }
+
+        function calculateTotal() {
+            if (!checkInEl.value || !checkOutEl.value || !roomSelect.value) {
+                bookBtn.disabled = true;
+                return;
+            }
+            
+            const checkIn = new Date(checkInEl.value);
+            const checkOut = new Date(checkOutEl.value);
+            
+            const diffTime = checkOut - checkIn;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 0) {
+                
+                const selected = roomSelect.options[roomSelect.selectedIndex];
+                const rate = parseFloat(selected.getAttribute('data-rate')) || 0;
+                const total = diffDays * rate;
+                
+                totalEl.value = total.toLocaleString('en-IN', {
+                    style: 'currency',
+                    currency: 'INR'
+                });
+                
+                dateError.style.display = 'none';
+                bookBtn.disabled = false;
+            } else {
+               
+                totalEl.value = "Invalid Dates";
+                dateError.style.display = 'block';
+                bookBtn.disabled = true;
+            }
+        }
+
+        [checkInEl, checkOutEl, roomSelect].forEach(el => {
+            if(el) {
+                el.addEventListener('change', calculateTotal);
+            }
+        });
+    });
+</script>
