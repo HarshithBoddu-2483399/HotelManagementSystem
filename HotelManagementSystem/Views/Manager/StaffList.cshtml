@@ -1,0 +1,47 @@
+﻿@model IEnumerable<HotelManagementSystem.Models.User>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Staff Directory</h2>
+        <a asp-action="AddStaff" class="btn btn-primary">+ Add Employee</a>
+    </div>
+
+    <table class="table table-striped shadow-sm align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Phone</th>
+                <th>Login Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var staff in Model)
+            {
+                <tr>
+                    <td class="fw-bold">@staff.UserId</td>
+                    <td>@staff.Name</td>
+                    <td><span class="badge bg-secondary">@staff.Role</span></td>
+                    <td>@staff.Phone</td>
+                    <td>@staff.Username</td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <a asp-action="EditStaff" asp-route-userId="@staff.UserId" class="btn btn-sm btn-primary">
+                                Edit
+                            </a>
+        
+                            <form asp-action="DeleteStaff" method="post" onsubmit="return confirm('Are you sure you want to delete @staff.Name?');">
+                                <input type="hidden" name="userId" value="@staff.UserId" />
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

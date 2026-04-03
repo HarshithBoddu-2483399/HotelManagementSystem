@@ -1,0 +1,121 @@
+@model HotelManagementSystem.ViewModels.PerformanceReportViewModel
+
+@{
+    ViewData["Title"] = "Performance Report";
+    bool isManagement = User.IsInRole("Admin") || User.IsInRole("Manager");
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Performance Report</h2>
+    
+    <div class="card shadow-sm border-0 mb-4 p-3 bg-white">
+        <h5 class="mb-3">Report Filters</h5>
+        <form method="get" asp-action="PerformanceReport" class="row g-3 align-items-end">
+            
+            @if (isManagement)
+            {
+                <div class="col-md-3">
+                    <label class="form-label text-muted">Select Staff</label>
+                    <select name="staffId" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Select a Staff Member --</option>
+                        @if (ViewBag.StaffList != null)
+                        {
+                            foreach (var item in ViewBag.StaffList)
+                            {
+                                if (Model.SelectedStaffId.ToString() == item.Value)
+                                {
+                                    <option value="@item.Value" selected>@item.Text</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            }
+                        }
+                    </select>
+                </div>
+            }
+
+            <div class="@(isManagement ? "col-md-3" : "col-md-4")">
+                <label class="form-label text-muted">Start Date</label>
+                <input type="date" id="startDate" name="startDate" class="form-control"
+                       value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+            </div>
+            
+            <div class="@(isManagement ? "col-md-3" : "col-md-4")">
+                <label class="form-label text-muted">End Date</label>
+                <input type="date" id="endDate" name="endDate" class="form-control"
+                       value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+            </div>
+            
+            <div class="@(isManagement ? "col-md-3" : "col-md-4")">
+                <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white fw-bold fs-5">
+            Performance Summary - @Model.StartDate.ToString("MMM dd, yyyy") to @Model.EndDate.ToString("MMM dd, yyyy")
+        </div>
+        <div class="card-body p-0">
+            @if (isManagement && Model.SelectedStaffId == null)
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-person-lines-fill fs-1 d-block mb-3"></i>
+                    <h4>Please select a staff member from the dropdown to view their performance metrics.</h4>
+                </div>
+            }
+            else
+            {
+                <table class="table table-bordered table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50%;">Metric</th>
+                            <th style="width: 50%;">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold">Total Tasks Assigned</td>
+                            <td><span class="badge bg-secondary fs-6">@Model.TotalAssigned</span></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Completed (On-Time)</td>
+                            <td><span class="badge bg-success fs-6">@Model.CompletedOnTime</span></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Completed (Delayed)</td>
+                            <td><span class="badge bg-warning text-dark fs-6">@Model.CompletedDelayed</span></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Accuracy</td>
+                            <td>
+                                <span class="badge @(Model.Accuracy >= 75 ? "bg-info text-dark" : "bg-danger") fs-6">
+                                    @Model.Accuracy%
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+
+            startDateInput.addEventListener('change', function () {
+                endDateInput.min = this.value;
+                if (endDateInput.value < this.value) {
+                    endDateInput.value = this.value;
+                }
+            });
+            endDateInput.min = startDateInput.value;
+        });
+    </script>
+}

@@ -5,6 +5,8 @@ namespace HotelManagementSystem.ViewModels
 {
     public class ManagerDashboardViewModel
     {
+        public int TotalRooms { get; set; }
+        public int MaintenanceRooms { get; set; }
         public decimal TotalRevenue { get; set; }
         public int OccupiedRooms { get; set; }
         public int AvailableRooms { get; set; }

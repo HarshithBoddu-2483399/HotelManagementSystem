@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using HotelManagementSystem.Services;
 
 namespace HotelManagementSystem.Controllers
@@ -28,7 +28,8 @@ namespace HotelManagementSystem.Controllers
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.Username),
-                    new Claim(ClaimTypes.Role, user.Role)
+                    new Claim(ClaimTypes.Role, user.Role),
+                    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString())
                 };
 
                 var identity = new ClaimsIdentity(claims, "CookieAuth");
@@ -40,7 +41,7 @@ namespace HotelManagementSystem.Controllers
                 {
                     "Admin" => RedirectToAction("Index", "Report"),
                     "Manager" => RedirectToAction("Index", "Manager"),
-                    "Housekeeping" => RedirectToAction("Index", "Housekeeping"),
+                    "Housekeeping" => RedirectToAction("StaffIndex", "Housekeeping"),
                     "Guest" => RedirectToAction("Index", "GuestPortal"),
                     _ => RedirectToAction("Index", "Billing")
                 };
@@ -54,6 +55,12 @@ namespace HotelManagementSystem.Controllers
         {
             await HttpContext.SignOutAsync("CookieAuth");
             return RedirectToAction("Login");
+        }
+
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
     }
 }

@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using HotelManagementSystem.Data;
+﻿using HotelManagementSystem.Data;
 using HotelManagementSystem.Models;
+using HotelManagementSystem.ViewModels;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace HotelManagementSystem.Services
 {
@@ -24,6 +25,39 @@ namespace HotelManagementSystem.Services
                 if (room != null) room.Status = "AVAILABLE";
                 _context.SaveChanges();
             }
+        }
+
+        public IEnumerable<HousekeepingTask> GetStaffTasks(int staffId)
+        {
+            return _context.HousekeepingTasks
+                .Where(t => t.AssignedStaffId == staffId && t.TaskStatus != "COMPLETED")
+                .OrderByDescending(t => t.TaskDate)
+                .ToList();
+        }
+
+        public IEnumerable<HousekeepingTask> GetCompletedStaffTasks(int staffId)
+        {
+            return _context.HousekeepingTasks
+                .Where(t => t.AssignedStaffId == staffId && t.TaskStatus == "COMPLETED")
+                .OrderByDescending(t => t.TaskDate)
+                .ToList();
+        }
+
+        public StaffPerformanceViewModel GetStaffPerformance(int staffId)
+        {
+            var today = System.DateTime.Today;
+
+            var completedTasks = _context.HousekeepingTasks
+                .Where(t => t.AssignedStaffId == staffId && t.TaskStatus == "COMPLETED")
+                .ToList();
+
+            return new StaffPerformanceViewModel
+            {
+                CompletedToday = completedTasks.Count(t => t.TaskDate.Date == today),
+                CompletedThisMonth = completedTasks.Count(t => t.TaskDate.Year == today.Year && t.TaskDate.Month == today.Month),
+                TotalCompleted = completedTasks.Count,
+                RecentCompletedTasks = completedTasks.OrderByDescending(t => t.TaskDate).Take(10).ToList()
+            };
         }
     }
 }

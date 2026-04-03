@@ -1,39 +1,61 @@
-﻿@model HotelManagementSystem.ViewModels.ManagerDashboardViewModel
+﻿@model IEnumerable<HotelManagementSystem.Models.HousekeepingTask>
+
+@{
+    ViewData["Title"] = "Task Assignments";
+}
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Housekeeping Staff Assignment</h2>
-        <a asp-action="Index" class="btn btn-outline-secondary">Back to Dashboard</a>
+        <h2>Schedule Cleaning Tasks</h2>
+        <a asp-controller="Manager" asp-action="Index" class="btn btn-outline-secondary">Back to Dashboard</a>
     </div>
 
     <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white fw-bold">Pending Room Tasks</div>
         <table class="table align-middle mb-0">
-            <thead class="table-dark">
+            <thead class="table-light">
                 <tr>
                     <th>Room Number</th>
-                    <th>Status</th>
-                    <th>Current Staff ID</th>
-                    <th>Assign Staff</th>
+                    <th>Task Status</th>
+                    <th>Current Assignment</th>
+                    <th>Schedule & Assign</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var task in Model.PendingTasksList)
+                @if (!Model.Any())
                 {
                     <tr>
-                        <td>Room @task.RoomId</td>
+                        <td colspan="4" class="text-center py-4 text-muted">No pending cleaning tasks available.</td>
+                    </tr>
+                }
+                @foreach (var task in Model)
+                {
+                    <tr>
+                        <td class="fw-bold">Room @task.RoomId</td>
                         <td><span class="badge bg-warning text-dark">@task.TaskStatus</span></td>
-                        <td>@(task.AssignedStaffId == 0 ? "Not Assigned" : task.AssignedStaffId.ToString())</td>
                         <td>
-                            <form asp-action="AssignStaff" method="post" class="d-flex gap-2">
+                            <span class="text-muted">
+                                @(task.AssignedStaffId == 0 ? "Not Assigned" : $"Staff ID: {task.AssignedStaffId}")
+                            </span>
+                        </td>
+                        <td>
+                            <form asp-action="AssignStaffToTask" method="post" class="assignment-form d-flex gap-2 align-items-center">
                                 <input type="hidden" name="taskId" value="@task.TaskId" />
-                                <select name="staffId" class="form-select form-select-sm" required>
+
+                                <select name="staffId" class="form-select staff-select w-auto" required>
                                     <option value="">Select Staff...</option>
-                                    @foreach (var staff in Model.AvailableStaff)
+                                    @foreach (var staff in ViewBag.AvailableStaff)
                                     {
-                                        <option value="@staff.UserId">@staff.Username</option>
+                                        <option value="@staff.UserId">@staff.Name (@staff.Role)</option>
                                     }
                                 </select>
-                                <button type="submit" class="btn btn-sm btn-primary">Assign</button>
+
+                                <input type="date" name="targetDate" class="form-control date-select w-auto"
+                                       value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+
+                                <input type="time" name="deadlineTime" class="form-control time-select w-auto" required />
+
+                                <button type="submit" class="btn btn-primary btn-sm assign-btn" disabled>Assign</button>
                             </form>
                         </td>
                     </tr>
@@ -42,3 +64,34 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const forms = document.querySelectorAll('.assignment-form');
+
+            forms.forEach(form => {
+                const staffSelect = form.querySelector('.staff-select');
+                const dateSelect = form.querySelector('.date-select');
+                const timeSelect = form.querySelector('.time-select');
+                const assignBtn = form.querySelector('.assign-btn');
+
+                const validateForm = () => {
+                    // Button only enables if Staff, Date, and Time are all selected
+                    if (staffSelect.value !== "" && dateSelect.value !== "" && timeSelect.value !== "") {
+                        assignBtn.removeAttribute('disabled');
+                    } else {
+                        assignBtn.setAttribute('disabled', 'true');
+                    }
+                };
+
+                staffSelect.addEventListener('change', validateForm);
+                dateSelect.addEventListener('change', validateForm);
+                timeSelect.addEventListener('change', validateForm);
+                timeSelect.addEventListener('input', validateForm);
+                
+                validateForm();
+            });
+        });
+    </script>
+}

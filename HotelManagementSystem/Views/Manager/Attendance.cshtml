@@ -1,0 +1,81 @@
+﻿@model HotelManagementSystem.ViewModels.AttendanceViewModel
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Daily Attendance</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="card p-3 mb-4 shadow-sm bg-light">
+        <form asp-action="Attendance" method="get" class="d-flex align-items-center gap-3">
+            <label class="fw-bold mb-0">Select Date:</label>
+            <input type="date" name="date" class="form-control w-auto"
+                   value="@Model.SelectedDate.ToString("yyyy-MM-dd")"
+                   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+            <button type="submit" class="btn btn-dark">View Attendance</button>
+        </form>
+    </div>
+
+    @if (Model.SelectedDate.Date > DateTime.Today)
+    {
+        <div class="alert alert-warning shadow-sm">
+            <i class="bi bi-exclamation-triangle"></i> You cannot view or mark attendance for future dates.
+        </div>
+    }
+    else
+    {
+        <table class="table table-hover shadow-sm align-middle bg-white">
+            <thead class="table-dark">
+                <tr>
+                    <th>Staff ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var staff in Model.Records)
+                {
+                    <tr>
+                        <td class="fw-bold">@staff.UserId</td>
+                        <td>@staff.Name</td>
+                        <td>@staff.Role</td>
+                        <td>
+                            @if (staff.IsPresent == true)
+                            {
+                                <span class="badge bg-success">Present</span>
+                            }
+                            else if (staff.IsPresent == false)
+                            {
+
+                                <span class="badge bg-danger">Absent</span>
+                            }
+                            else
+                            {
+
+                                <span class="badge bg-warning text-dark">Not Marked</span>
+                            }
+                        </td>
+                        <td>
+                            @if (Model.SelectedDate.Date == DateTime.Today)
+                            {
+                                <form asp-action="MarkAttendance" method="post" class="d-inline">
+                                    <input type="hidden" name="userId" value="@staff.UserId" />
+                                    <input type="hidden" name="selectedDate" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
+                                    
+                                    <button type="submit" name="isPresent" value="true" class="btn btn-sm btn-outline-success me-1">✔ Present</button>
+                                    <button type="submit" name="isPresent" value="false" class="btn btn-sm btn-outline-danger">✖ Absent</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="text-muted small fw-bold">🔒 Locked (Report Only)</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

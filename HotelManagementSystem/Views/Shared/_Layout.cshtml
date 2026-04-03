@@ -10,14 +10,13 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f8; }
         .container { padding: 28px; max-width: 1200px; margin: 0 auto; }
-        .navbar-custom { background-color: #2c3e50; } /* Example color to match your CSS */
+        .navbar-custom { background-color: #2c3e50; } 
         .user-name { color: #ecf0f1; font-size: 0.9rem; margin-right: 15px; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm">
         <div class="container-fluid">
-            @* The Brand link now routes based on Role *@
             @if (User.IsInRole("Admin"))
             {
                 <a class="navbar-brand" asp-controller="Report" asp-action="Index">HotelMS (Admin)</a>
@@ -31,22 +30,22 @@
                 <a class="navbar-brand" href="/">HotelMS</a>
             }
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     
-                    @* --- ADMIN ONLY MENU --- *@
+                    @* --- 1. ADMIN ONLY MENU --- *@
                     @if (User.IsInRole("Admin"))
                     {
                         <li class="nav-item"><a class="nav-link" asp-controller="Report" asp-action="Index">Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Room" asp-action="Index">Rooms</a></li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="bookingsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Bookings</a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bookingsMenu">
+                            <a class="nav-link dropdown-toggle" href="#" id="bookingsMenu" data-bs-toggle="dropdown">Bookings</a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                 <li><a class="dropdown-item" asp-controller="Reservation" asp-action="Create">New Booking</a></li>
                                 <li><a class="dropdown-item" asp-controller="Reservation" asp-action="Index">All Bookings</a></li>
                                 <li><hr class="dropdown-divider" /></li>
@@ -56,67 +55,100 @@
                         </li>
 
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="financeMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Financials</a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="financeMenu">
+                            <a class="nav-link dropdown-toggle" href="#" id="financeMenu" data-bs-toggle="dropdown">Financials</a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                 <li><a class="dropdown-item" asp-controller="Billing" asp-action="Index">Billing</a></li>
                                 <li><a class="dropdown-item" asp-controller="Billing" asp-action="AllInvoices">All Invoices</a></li>
                             </ul>
                         </li>
-                    }
 
-                    @* --- MANAGER ONLY MENU --- *@
-                    @if (User.IsInRole("Manager"))
-                    {
-                        <li class="nav-item"><a class="nav-link" asp-controller="Manager" asp-action="Index">Manager Overview</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Manager" asp-action="Rooms">Rooms</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Manager" asp-action="Housekeeping">Assignments</a></li>
-                    }
-
-                    @* --- SHARED / HOUSEKEEPING MENU --- *@
-                    @if (User.IsInRole("Admin") || User.IsInRole("Housekeeping"))
-                    {
+                        @* Admin Housekeeping section *@
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="housekeepingMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Housekeeping</a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="housekeepingMenu">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminHkDropdown" data-bs-toggle="dropdown">Housekeeping</a>
+                            <ul class="dropdown-menu shadow-sm">
                                 <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="Index">Pending Tasks</a></li>
                                 <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="AllTasks">All Tasks</a></li>
+                                <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="PerformanceReport">Staff Performance</a></li>
                             </ul>
                         </li>
-                    }
 
-                    @* --- REPORTS (Admin and Manager) --- *@
-                    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
-                    {
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="reportsMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Reports</a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="reportsMenu">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminReports" data-bs-toggle="dropdown">Reports</a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                 <li><a class="dropdown-item" asp-controller="Report" asp-action="OccupancyReport">Occupancy Report</a></li>
                                 <li><a class="dropdown-item" asp-controller="Report" asp-action="RevenueAnalysis">Revenue Analysis</a></li>
                             </ul>
                         </li>
                     }
 
-                    @* --- AUTHENTICATION LINKS --- *@
+                    @* --- 2. MANAGER ONLY MENU --- *@
+                    @if (User.IsInRole("Manager"))
+                    {
+                        <li class="nav-item"><a class="nav-link" asp-controller="Manager" asp-action="Index">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Manager" asp-action="Rooms">Rooms</a></li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="assignmentsDropdown" data-bs-toggle="dropdown">Assignments</a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><a class="dropdown-item" asp-controller="Manager" asp-action="Housekeeping">Assign</a></li>
+                                <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="Index">View Pending</a></li>
+                                <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="PerformanceReport">Staff Performance</a></li>
+                            </ul>
+                        </li>
+    
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="staffDropdown" data-bs-toggle="dropdown">Staff Management</a>
+                            <ul class="dropdown-menu shadow-sm border-0">
+                                <li><a class="dropdown-item" asp-controller="Manager" asp-action="StaffList">Staff Directory</a></li>
+                                <li><a class="dropdown-item" asp-controller="Manager" asp-action="Attendance">Daily Attendance</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="managerReports" data-bs-toggle="dropdown">Reports</a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li><a class="dropdown-item" asp-controller="Report" asp-action="OccupancyReport">Occupancy Report</a></li>
+                                <li><a class="dropdown-item" asp-controller="Report" asp-action="RevenueAnalysis">Revenue Analysis</a></li>
+                            </ul>
+                        </li>
+                    }
+
+                    @* --- 3. HOUSEKEEPING STAFF MENU --- *@
+                    @if (User.IsInRole("Housekeeping"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold text-warning" asp-controller="Housekeeping" asp-action="StaffIndex">My Daily Tasks</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Housekeeping" asp-action="History">My Cleaning History</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-info fw-bold" asp-controller="Housekeeping" asp-action="PerformanceReport">Performance Report</a>
+                        </li>
+                    }
+
+                    @* --- AUTHENTICATION --- *@
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <li class="nav-item ms-lg-3">
-                            <span class="user-name">Hi, @User.Identity.Name</span>
+                        <li class="nav-item ms-lg-3 d-flex align-items-center">
+                            <span class="user-name mb-0">Hi, @(User.Identity?.Name ?? "User")</span>
                             <a class="btn btn-outline-danger btn-sm" asp-controller="Account" asp-action="Logout">Logout</a>
                         </li>
                     }
                     else
                     {
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Account" asp-action="Login">Login</a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Login</a></li>
                     }
                 </ul>
             </div>
         </div>
     </nav>
+
     <div class="container">
         @RenderBody()
     </div>
+
     <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

@@ -1,0 +1,30 @@
+@model IEnumerable<HotelManagementSystem.Models.HousekeepingTask>
+
+<div class="container mt-4">
+    <h2>Cleaning History</h2>
+    <hr />
+    
+    <table class="table table-striped shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Date Completed</th>
+                <th>Room Number</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="3" class="text-center">No cleaning history found.</td></tr>
+            }
+            @foreach (var task in Model)
+            {
+                <tr>
+                    <td>@task.TaskDate.ToString("MMMM dd, yyyy - hh:mm tt")</td>
+                    <td class="fw-bold">Room @task.RoomId</td>
+                    <td><span class="badge bg-success">COMPLETED</span></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

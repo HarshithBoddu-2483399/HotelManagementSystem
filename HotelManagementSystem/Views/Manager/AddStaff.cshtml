@@ -1,0 +1,35 @@
+﻿@model HotelManagementSystem.Models.User
+
+<div class="container mt-4">
+    <h2>Add New Staff</h2>
+    <hr />
+    <div class="alert alert-info">
+        <strong>Note:</strong> Username (Email) and Password will be auto-generated automatically upon saving (e.g., staffID@hotel.com / hotel@123).
+    </div>
+
+    <form asp-action="AddStaff" method="post" class="mt-4" style="max-width: 500px;">
+        <div class="mb-3">
+            <label>Full Name</label>
+            <input type="text" asp-for="Name" class="form-control" required />
+        </div>
+        <div class="mb-3">
+            <label>Phone Number</label>
+            <input type="text" asp-for="Phone" class="form-control" required
+                   maxlength="10" minlength="10"
+                   pattern="[0-9]{10}"
+                   title="Phone number must be exactly 10 digits"
+                   oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+            <small class="text-muted">Must be exactly 10 digits.</small>
+        </div>
+        <div class="mb-3">
+            <label>Department / Role</label>
+            <select asp-for="Role" class="form-select" required>
+                <option value="Housekeeping">Housekeeping</option>
+                <option value="Receptionist">Receptionist</option>
+                <option value="Manager">Manager</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Employee</button>
+        <a asp-action="StaffList" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>

@@ -58,4 +58,20 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    if (!context.Users.Any(u => u.Username == "staff1@hotel.com"))
+    {
+        context.Users.Add(new User
+        {
+            Username = "staff1@hotel.com",
+            Password = "Staff@123",
+            Role = "Housekeeping"
+        });
+        context.SaveChanges();
+    }
+}
+
 app.Run();
