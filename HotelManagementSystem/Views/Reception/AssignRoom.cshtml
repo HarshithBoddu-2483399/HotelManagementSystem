@@ -1,0 +1,48 @@
+﻿@model HotelManagementSystem.ViewModels.AssignRoomViewModel
+@{
+    ViewData["Title"] = "Assign Room";
+}
+
+<div class="container mt-4">
+    <a asp-action="Index" class="btn btn-outline-secondary mb-3"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+    
+    <h2>Assign Room @Model.Room.RoomNumber</h2>
+    <p class="text-muted">Room Type: <strong>@Model.Room.RoomType</strong></p>
+
+    <div class="card shadow-sm border-0 p-4 mt-4">
+        <h5 class="mb-3">Today's Arrivals Matching this Room Type</h5>
+        
+        @if (Model.MatchingArrivals.Any())
+        {
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Guest Name</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var arrival in Model.MatchingArrivals)
+                    {
+                        <tr>
+                            <td class="fw-bold text-primary">@arrival.GuestName</td>
+                            <td>@arrival.CheckInDate.ToString("MMM dd, yyyy")</td>
+                            <td>@arrival.CheckOutDate.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <button class="btn btn-success btn-sm">Confirm Assignment</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="alert alert-warning text-center">
+                <i class="bi bi-exclamation-triangle-fill"></i> No pending arrivals found today for a <strong>@Model.Room.RoomType</strong> room.
+            </div>
+        }
+    </div>
+</div>

@@ -42,6 +42,7 @@ namespace HotelManagementSystem.Controllers
                     "Admin" => RedirectToAction("Index", "Report"),
                     "Manager" => RedirectToAction("Index", "Manager"),
                     "Housekeeping" => RedirectToAction("StaffIndex", "Housekeeping"),
+                    "Receptionist" => RedirectToAction("Index", "Reception"),
                     "Guest" => RedirectToAction("Index", "GuestPortal"),
                     _ => RedirectToAction("Index", "Billing")
                 };

@@ -4,6 +4,7 @@ using System.Linq;
 using HotelManagementSystem.Data;
 using HotelManagementSystem.Models;
 using HotelManagementSystem.ViewModels;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelManagementSystem.Services
 {
@@ -14,33 +15,6 @@ namespace HotelManagementSystem.Services
 
         public IEnumerable<FinancialRecord> GetPaidInvoices()
         {
-            // Paid invoices for relevant booking statuses (include invoiced/checked-out/completed)
-            var query = from inv in _context.Invoices
-                        join res in _context.Reservations on inv.ReservationId equals res.ReservationId
-                        join guest in _context.Guests on res.GuestId equals guest.GuestId
-                        join room in _context.Rooms on res.RoomId equals room.RoomId
-                        where inv.PaymentStatus == "PAID" && (
-                            res.ReservationStatus == "BOOKED" ||
-                            res.ReservationStatus == "CHECKED_IN" ||
-                            res.ReservationStatus == "CHECKED_OUT" ||
-                            res.ReservationStatus == "INVOICED" ||
-                            res.ReservationStatus == "COMPLETED"
-                        )
-                        select new FinancialRecord
-                        {
-                            InvoiceId = inv.InvoiceId,
-                            ReservationId = res.ReservationId,
-                            GuestName = guest.Name,
-                            RoomNumber = room.RoomNumber,
-                            InvoiceDate = inv.InvoiceDate,
-                            TotalAmount = inv.TotalAmount
-                        };
-            return query.OrderByDescending(i => i.InvoiceDate).ToList();
-        }
-
-        public IEnumerable<FinancialRecord> GetAllInvoices()
-        {
-            // All paid invoices for any booking status
             var query = from inv in _context.Invoices
                         join res in _context.Reservations on inv.ReservationId equals res.ReservationId
                         join guest in _context.Guests on res.GuestId equals guest.GuestId
@@ -58,15 +32,19 @@ namespace HotelManagementSystem.Services
             return query.OrderByDescending(i => i.InvoiceDate).ToList();
         }
 
+        public IEnumerable<FinancialRecord> GetAllInvoices()
+        {
+            return GetPaidInvoices();
+        }
+
         public void MarkInvoicePaid(int invoiceId)
         {
             var inv = _context.Invoices.Find(invoiceId);
             if (inv != null)
             {
                 inv.PaymentStatus = "PAID";
-                // Update the reservation status to COMPLETED when invoice is marked as paid
                 var res = _context.Reservations.Find(inv.ReservationId);
-                if (res != null && res.ReservationStatus == "INVOICED")
+                if (res != null)
                 {
                     res.ReservationStatus = "COMPLETED";
                 }
@@ -76,46 +54,41 @@ namespace HotelManagementSystem.Services
 
         public IEnumerable<BookingRecord> GetActiveBookings()
         {
-            // Active / upcoming bookings should include BOOKED, CHECKED_IN, CHECKED_OUT, and INVOICED
-            // Exclude COMPLETED status - once paid, reservations move to All Invoices
-            var today = DateTime.Today;
-            var query = from res in _context.Reservations
-                        join guest in _context.Guests on res.GuestId equals guest.GuestId
-                        join room in _context.Rooms on res.RoomId equals room.RoomId
-                        // include bookings that are:
-                        // - BOOKED (future/upcoming), or
-                        // - in-progress/invoiced (CHECKED_IN, CHECKED_OUT, INVOICED with recent check-out date)
-                        // Exclude COMPLETED - those are finished and appear only in All Invoices
-                        where (
-                            // Always include newly BOOKED reservations so staff can Check-In on arrival
-                            (res.ReservationStatus == "BOOKED")
-                            || ((res.ReservationStatus == "CHECKED_IN" || res.ReservationStatus == "CHECKED_OUT" || res.ReservationStatus == "INVOICED") && res.CheckOutDate >= today)
-                        )
-                        select new BookingRecord
-                        {
-                            ReservationId = res.ReservationId,
-                            GuestId = guest.GuestId,
-                            GuestName = guest.Name,
-                            RoomNumber = room.RoomNumber,
-                            CheckIn = res.CheckInDate,
-                            CheckOut = res.CheckOutDate,
-                            Status = res.ReservationStatus
-                        };
-            var list = query.OrderBy(b => b.CheckIn).ToList();
-            // Attach invoice id if present
-            foreach (var b in list)
+            var reservations = _context.Reservations
+                .Where(r => r.ReservationStatus != "COMPLETED" && r.ReservationStatus != "CANCELLED")
+                .ToList();
+
+            var result = new List<BookingRecord>();
+
+            foreach (var res in reservations)
             {
-                var inv = _context.Invoices.FirstOrDefault(i => i.ReservationId == b.ReservationId);
-                if (inv != null) b.InvoiceId = inv.InvoiceId;
-                if (inv != null) b.InvoicePaid = inv.PaymentStatus == "PAID";
+                var guest = _context.Guests.Find(res.GuestId);
+                var room = _context.Rooms.Find(res.RoomId);
+                var inv = _context.Invoices.FirstOrDefault(i => i.ReservationId == res.ReservationId);
+
+                if (inv != null && inv.PaymentStatus == "PAID") continue;
+
+                result.Add(new BookingRecord
+                {
+                    ReservationId = res.ReservationId,
+                    GuestId = res.GuestId,
+                    GuestName = guest?.Name ?? "Unknown Guest",
+                    RoomNumber = room?.RoomNumber ?? "N/A",
+                    CheckIn = res.CheckInDate,
+                    CheckOut = res.CheckOutDate,
+                    Status = res.ReservationStatus,
+                    InvoiceId = inv?.InvoiceId,
+                    InvoicePaid = inv?.PaymentStatus == "PAID"
+                });
             }
-            return list;
+
+            return result.OrderBy(b => b.CheckIn).ToList();
         }
 
         public void CheckInGuest(int reservationId)
         {
             var res = _context.Reservations.Find(reservationId);
-            if (res != null && res.ReservationStatus == "BOOKED")
+            if (res != null)
             {
                 res.ReservationStatus = "CHECKED_IN";
                 var room = _context.Rooms.Find(res.RoomId);
@@ -127,9 +100,11 @@ namespace HotelManagementSystem.Services
         public void CheckOutGuest(int reservationId)
         {
             var res = _context.Reservations.Find(reservationId);
-            if (res != null && res.ReservationStatus == "CHECKED_IN")
+            if (res != null)
             {
                 res.ReservationStatus = "CHECKED_OUT";
+                var room = _context.Rooms.Find(res.RoomId);
+                if (room != null) room.Status = "DIRTY";
                 _context.SaveChanges();
             }
         }
@@ -139,24 +114,52 @@ namespace HotelManagementSystem.Services
             var res = _context.Reservations.Find(resId);
             var room = _context.Rooms.Find(res.RoomId);
 
-            if (_context.Invoices.Any(i => i.ReservationId == resId))
-                return _context.Invoices.First(i => i.ReservationId == resId);
+            var existingInv = _context.Invoices.FirstOrDefault(i => i.ReservationId == resId);
+            if (existingInv != null) return existingInv;
 
-            int days = (int)(res.CheckOutDate - res.CheckInDate).TotalDays;
-            if (days <= 0) days = 1;
+            double diffHours = (res.CheckOutDate - res.CheckInDate).TotalHours;
+            decimal daysToCharge = 0m;
+
+            if (diffHours <= 24)
+            {
+                daysToCharge = 1.0m; 
+            }
+            else
+            {
+                int fullDays = (int)Math.Floor(diffHours / 24.0);
+                double extraHours = diffHours % 24.0;
+
+                daysToCharge = fullDays;
+
+                if (extraHours > 0 && extraHours <= 6)
+                {
+                    daysToCharge += 0.5m;
+                }
+                else if (extraHours > 6)
+                {
+                    daysToCharge += 1.0m; 
+                }
+            }
+
+            var totalAmt = daysToCharge * (room?.RatePerNight ?? 0m);
 
             var inv = new Invoice
             {
                 ReservationId = resId,
                 InvoiceDate = DateTime.Now,
-                TotalAmount = days * room.RatePerNight,
+                TotalAmount = totalAmt,
                 PaymentStatus = "PENDING"
             };
 
             _context.Invoices.Add(inv);
             res.ReservationStatus = "INVOICED";
 
-            _context.HousekeepingTasks.Add(new HousekeepingTask { RoomId = room.RoomId, TaskDate = DateTime.Now, TaskStatus = "PENDING" });
+            _context.HousekeepingTasks.Add(new HousekeepingTask
+            {
+                RoomId = res.RoomId,
+                TaskDate = DateTime.Now,
+                TaskStatus = "PENDING"
+            });
 
             _context.SaveChanges();
             return inv;

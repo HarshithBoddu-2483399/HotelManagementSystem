@@ -10,7 +10,7 @@ namespace HotelManagementSystem.Models
         public int RoomId { get; set; }
 
         public int AssignedStaffId { get; set; }
-        public string TaskStatus { get; set; } 
+        public string TaskStatus { get; set; }
         public DateTime TaskDate { get; set; }
         public DateTime? CompletedAt { get; set; }
 

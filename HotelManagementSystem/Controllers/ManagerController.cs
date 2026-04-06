@@ -20,7 +20,33 @@ namespace HotelManagementSystem.Controllers
             _context = context;
         }
 
-        // --- DASHBOARD & ROOMS ---
+        // --- STAFF MANAGEMENT ---
+        [HttpGet]
+        public IActionResult StaffList()
+        {
+            return View(_managerService.GetAllStaff());
+        }
+
+        [HttpGet]
+        public IActionResult AddStaff()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult AddStaff(User staff)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Users.Add(staff);
+                _context.SaveChanges();
+
+
+                return RedirectToAction("StaffList");
+            }
+            return View(staff);
+        }
+
         public IActionResult Index()
         {
             var data = _managerService.GetManagerDashboardData();
@@ -45,13 +71,10 @@ namespace HotelManagementSystem.Controllers
             return RedirectToAction("Rooms");
         }
 
-        // --- HOUSEKEEPING ASSIGNMENTS ---
         [HttpGet]
         public IActionResult Housekeeping()
         {
-            // Sends only Housekeeping staff to the View dropdown
             ViewBag.AvailableStaff = _managerService.GetAllStaff().Where(u => u.Role == "Housekeeping").ToList();
-
             var pendingTasks = _context.HousekeepingTasks.Where(t => t.TaskStatus == "PENDING").ToList();
             return View(pendingTasks);
         }
@@ -61,26 +84,6 @@ namespace HotelManagementSystem.Controllers
         {
             _managerService.AssignStaffToTask(taskId, staffId, targetDate, deadlineTime);
             return RedirectToAction("Housekeeping");
-        }
-
-        // --- STAFF MANAGEMENT ---
-        [HttpGet]
-        public IActionResult StaffList()
-        {
-            return View(_managerService.GetAllStaff());
-        }
-
-        [HttpGet]
-        public IActionResult AddStaff()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public IActionResult AddStaff(User staff)
-        {
-            _managerService.AddStaff(staff);
-            return RedirectToAction("StaffList");
         }
 
         [HttpGet]
@@ -105,7 +108,6 @@ namespace HotelManagementSystem.Controllers
             return RedirectToAction("StaffList");
         }
 
-        // --- ATTENDANCE ---
         [HttpGet]
         public IActionResult Attendance(DateTime? date = null)
         {
@@ -121,7 +123,6 @@ namespace HotelManagementSystem.Controllers
             {
                 return RedirectToAction("Attendance", new { date = selectedDate.ToString("yyyy-MM-dd") });
             }
-
             _managerService.MarkAttendance(userId, selectedDate, isPresent);
             return RedirectToAction("Attendance", new { date = selectedDate.ToString("yyyy-MM-dd") });
         }

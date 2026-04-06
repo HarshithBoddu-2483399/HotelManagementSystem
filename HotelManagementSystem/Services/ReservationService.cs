@@ -17,7 +17,8 @@ namespace HotelManagementSystem.Services
             bool isOverlap = _context.Reservations.Any(r =>
                 r.RoomId == res.RoomId &&
                 r.ReservationStatus != "CANCELLED" &&
-                res.CheckInDate < r.CheckOutDate &&
+                r.ReservationStatus != "COMPLETED" &&
+                res.CheckInDate < r.CheckOutDate.AddHours(1) && 
                 res.CheckOutDate > r.CheckInDate);
 
             if (isOverlap) return false;
@@ -34,7 +35,10 @@ namespace HotelManagementSystem.Services
             res.ReservationStatus = "BOOKED";
 
             var room = _context.Rooms.Find(res.RoomId);
-            if (room != null) room.Status = "BOOKED";
+            if (room != null && room.Status == "AVAILABLE")
+            {
+                room.Status = "BOOKED";
+            }
 
             _context.Reservations.Add(res);
             _context.SaveChanges();
@@ -50,7 +54,6 @@ namespace HotelManagementSystem.Services
                 res.ReservationStatus = "CANCELLED";
 
                 var room = _context.Rooms.Find(res.RoomId);
-
                 if (room != null && room.Status == "BOOKED")
                 {
                     room.Status = "AVAILABLE";

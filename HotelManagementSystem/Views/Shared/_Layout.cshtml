@@ -127,6 +127,38 @@
                         </li>
                     }
 
+                    @* --- RECEPTIONIST ONLY MENU --- *@
+                    @if (User.IsInRole("Receptionist"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Reception" asp-action="Index">Front Desk</a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="bookingsMenu" data-bs-toggle="dropdown">Bookings</a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li><a class="dropdown-item" asp-controller="Reservation" asp-action="Create">New Booking</a></li>
+                                <li><a class="dropdown-item" asp-controller="Reservation" asp-action="Index">All Bookings</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="bookingsMenu" data-bs-toggle="dropdown">Manage Guests</a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li><a class="dropdown-item" asp-controller="Guest" asp-action="Create">Register Guest</a></li>
+                                <li><a class="dropdown-item" asp-controller="Guest" asp-action="Index">All Guests</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="financeMenu" data-bs-toggle="dropdown">Financials</a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li><a class="dropdown-item" asp-controller="Billing" asp-action="Index">Billing</a></li>
+                                <li><a class="dropdown-item" asp-controller="Billing" asp-action="AllInvoices">All Invoices</a></li>
+                            </ul>
+                        </li>
+                    }
+
                     @* --- AUTHENTICATION --- *@
                     @if (User.Identity.IsAuthenticated)
                     {

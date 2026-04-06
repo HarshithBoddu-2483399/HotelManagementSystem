@@ -14,19 +14,8 @@
         
         <div class="col-md-4 position-relative">
             <label class="form-label">Phone</label>
-            <input id="guestPhone"
-                   class="form-control"
-                   type="tel"
-                   name="guest.ContactInfo"
-                   placeholder="10-digit Mobile Number"
-                   autocomplete="off"
-                   required
-                   pattern="\d{10}"
-                   maxlength="10"
-                   oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
-            
+            <input id="guestPhone" class="form-control" type="tel" name="guest.ContactInfo" placeholder="10-digit Mobile Number" autocomplete="off" required pattern="\d{10}" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
             <div id="phoneSuggestions" class="list-group position-absolute shadow" style="z-index:1050; width:100%; display:none; max-height:200px; overflow:auto; top: 100%;"></div>
-            
             <div id="registerPrompt" class="form-text text-danger mt-1" style="display:none; font-weight: 500;">
                 Guest not found. <a id="registerLink" href="/Guest/Create" target="_blank" class="text-decoration-underline">Register new guest</a>
             </div>
@@ -39,38 +28,99 @@
 
         <div class="col-md-4">
             <label class="form-label">Email</label>
-            <input id="guestEmail"
-                   class="form-control"
-                   type="email"
-                   name="guest.Email"
-                   placeholder="Email Address"
-                   required
-                   pattern="[a-z0-9._%+-]+&#64;[a-z0-9.-]+\.[a-z]{2,}$" />
+            <input id="guestEmail" class="form-control" type="email" name="guest.Email" placeholder="Email Address" required pattern="[a-z0-9._%+-]+&#64;[a-z0-9.-]+\.[a-z]{2,}$" />
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-12">
             <label class="form-label">Room</label>
-            <select id="roomSelect" class="form-select" name="reservation.RoomId">
+            <select id="roomSelect" class="form-select" name="reservation.RoomId" required>
+                <option value="">-- Choose a Room --</option>
                 @if (ViewBag.Rooms != null)
                 {
                     foreach (var room in ViewBag.Rooms)
                     {
-                        <option value="@room.RoomId" data-rate="@room.RatePerNight">
-                            Room @room.RoomNumber (@room.RoomType) - ₹@room.RatePerNight
-                        </option>
+                        if (ViewBag.SelectedRoomId != null && ViewBag.SelectedRoomId == room.RoomId)
+                        {
+                            <option value="@room.RoomId" data-rate="@room.RatePerNight" selected>Room @room.RoomNumber (@room.RoomType) - ₹@room.RatePerNight</option>
+                        }
+                        else
+                        {
+                            <option value="@room.RoomId" data-rate="@room.RatePerNight">Room @room.RoomNumber (@room.RoomType) - ₹@room.RatePerNight</option>
+                        }
                     }
                 }
             </select>
+            <div id="timeWarning" class="alert alert-danger mt-2 py-2 mb-0 fw-bold" style="display:none; font-size: 0.9rem;"></div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-4">
             <label class="form-label">Check-In</label>
-            <input id="checkIn" class="form-control" type="date" name="reservation.CheckInDate" required />
+            <div class="input-group">
+                <input id="inDate" class="form-control" type="date" required />
+                <select id="inTime" class="form-select" required style="max-width: 130px;">
+                    <option value="" disabled selected>Time</option>
+                    <option value="00:00">12:00 AM</option>
+                    <option value="01:00">01:00 AM</option>
+                    <option value="02:00">02:00 AM</option>
+                    <option value="03:00">03:00 AM</option>
+                    <option value="04:00">04:00 AM</option>
+                    <option value="05:00">05:00 AM</option>
+                    <option value="06:00">06:00 AM</option>
+                    <option value="07:00">07:00 AM</option>
+                    <option value="08:00">08:00 AM</option>
+                    <option value="09:00">09:00 AM</option>
+                    <option value="10:00">10:00 AM</option>
+                    <option value="11:00">11:00 AM</option>
+                    <option value="12:00">12:00 PM</option>
+                    <option value="13:00">01:00 PM</option>
+                    <option value="14:00">02:00 PM</option>
+                    <option value="15:00">03:00 PM</option>
+                    <option value="16:00">04:00 PM</option>
+                    <option value="17:00">05:00 PM</option>
+                    <option value="18:00">06:00 PM</option>
+                    <option value="19:00">07:00 PM</option>
+                    <option value="20:00">08:00 PM</option>
+                    <option value="21:00">09:00 PM</option>
+                    <option value="22:00">10:00 PM</option>
+                    <option value="23:00">11:00 PM</option>
+                </select>
+            </div>
+            <input type="hidden" name="reservation.CheckInDate" id="hiddenCheckIn" />
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-4">
             <label class="form-label">Check-Out</label>
-            <input id="checkOut" class="form-control" type="date" name="reservation.CheckOutDate" required />
+            <div class="input-group">
+                <input id="outDate" class="form-control" type="date" required />
+                <select id="outTime" class="form-select" required style="max-width: 130px;">
+                    <option value="" disabled selected>Time</option>
+                    <option value="00:00">12:00 AM</option>
+                    <option value="01:00">01:00 AM</option>
+                    <option value="02:00">02:00 AM</option>
+                    <option value="03:00">03:00 AM</option>
+                    <option value="04:00">04:00 AM</option>
+                    <option value="05:00">05:00 AM</option>
+                    <option value="06:00">06:00 AM</option>
+                    <option value="07:00">07:00 AM</option>
+                    <option value="08:00">08:00 AM</option>
+                    <option value="09:00">09:00 AM</option>
+                    <option value="10:00">10:00 AM</option>
+                    <option value="11:00">11:00 AM</option>
+                    <option value="12:00">12:00 PM</option>
+                    <option value="13:00">01:00 PM</option>
+                    <option value="14:00">02:00 PM</option>
+                    <option value="15:00">03:00 PM</option>
+                    <option value="16:00">04:00 PM</option>
+                    <option value="17:00">05:00 PM</option>
+                    <option value="18:00">06:00 PM</option>
+                    <option value="19:00">07:00 PM</option>
+                    <option value="20:00">08:00 PM</option>
+                    <option value="21:00">09:00 PM</option>
+                    <option value="22:00">10:00 PM</option>
+                    <option value="23:00">11:00 PM</option>
+                </select>
+            </div>
+            <input type="hidden" name="reservation.CheckOutDate" id="hiddenCheckOut" />
         </div>
 
         <div class="col-md-4">
@@ -79,8 +129,8 @@
             <small id="dateError" class="text-danger mt-1" style="display:none; font-weight:500;">Check-Out must be after Check-In.</small>
         </div>
 
-        <div class="col-12">
-            <button id="bookBtn" class="btn btn-primary" type="submit" disabled>Book Now</button>
+        <div class="col-12 mt-4">
+            <button id="bookBtn" class="btn btn-primary px-4" type="submit" disabled>Book Now</button>
         </div>
     </form>
 </div>
@@ -91,37 +141,108 @@
         const nameInput = document.getElementById('guestName');
         const emailInput = document.getElementById('guestEmail');
         const suggestionsEl = document.getElementById('phoneSuggestions');
-        
         const registerPrompt = document.getElementById('registerPrompt');
         const registerLink = document.getElementById('registerLink');
         
-        const checkInEl = document.getElementById('checkIn');
-        const checkOutEl = document.getElementById('checkOut');
+        const inDate = document.getElementById('inDate');
+        const inTime = document.getElementById('inTime');
+        const outDate = document.getElementById('outDate');
+        const outTime = document.getElementById('outTime');
+        const hiddenCheckIn = document.getElementById('hiddenCheckIn');
+        const hiddenCheckOut = document.getElementById('hiddenCheckOut');
+        
         const roomSelect = document.getElementById('roomSelect');
         const totalEl = document.getElementById('totalPrice');
         const bookBtn = document.getElementById('bookBtn');
         const dateError = document.getElementById('dateError');
+        const timeWarning = document.getElementById('timeWarning');
 
         let timeout = null;
 
-       
-        const today = new Date().toISOString().split('T')[0];
-        checkInEl.min = today;
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        inDate.min = `${yyyy}-${mm}-${dd}`;
 
-        checkInEl.addEventListener('change', function() {
-            if (this.value) {
-                const minOutDate = new Date(this.value);
-                minOutDate.setDate(minOutDate.getDate() + 1);
-                const minOutString = minOutDate.toISOString().split('T')[0];
-                checkOutEl.min = minOutString;
-                
-                
-                if (checkOutEl.value && checkOutEl.value < minOutString) {
-                    checkOutEl.value = '';
-                }
+        inDate.addEventListener('change', function() {
+            outDate.min = this.value;
+            if (outDate.value && outDate.value < this.value) {
+                outDate.value = this.value;
             }
         });
 
+        [inDate, inTime, outDate, outTime, roomSelect].forEach(el => {
+            if(el) el.addEventListener('change', validateAvailabilityAndTotal);
+        });
+
+        function validateAvailabilityAndTotal() {
+            if (!inDate.value || !inTime.value || !outDate.value || !outTime.value || !roomSelect.value) {
+                bookBtn.disabled = true;
+                return;
+            }
+
+            const checkInStr = `${inDate.value}T${inTime.value}:00`;
+            const checkOutStr = `${outDate.value}T${outTime.value}:00`;
+            
+            hiddenCheckIn.value = checkInStr;
+            hiddenCheckOut.value = checkOutStr;
+
+            const checkIn = new Date(checkInStr);
+            const checkOut = new Date(checkOutStr);
+            const diffTime = checkOut - checkIn;
+
+            if (diffTime <= 0) {
+                totalEl.value = "Invalid Dates";
+                dateError.style.display = 'block';
+                bookBtn.disabled = true;
+                return;
+            }
+
+            dateError.style.display = 'none';
+
+            const diffHours = diffTime / (1000 * 60 * 60);
+            let daysToCharge = 0;
+
+            if (diffHours <= 24) {
+                daysToCharge = 1; 
+            } else {
+                const fullDays = Math.floor(diffHours / 24);
+                const extraHours = diffHours % 24;
+
+                daysToCharge = fullDays;
+                
+                if (extraHours > 0 && extraHours <= 6) {
+                    daysToCharge += 0.5;
+                }
+                else if (extraHours > 6) {
+                    daysToCharge += 1;
+                }
+            }
+
+            const url = `/Reservation/CheckAvailability?roomId=${roomSelect.value}&checkIn=${checkInStr}&checkOut=${checkOutStr}`;
+            
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if(!data.available) {
+                        timeWarning.innerText = data.message;
+                        timeWarning.style.display = 'block';
+                        bookBtn.disabled = true;
+                        totalEl.value = "Room Blocked";
+                    } else {
+                        timeWarning.style.display = 'none';
+                        bookBtn.disabled = false;
+                        
+                        const selected = roomSelect.options[roomSelect.selectedIndex];
+                        const rate = parseFloat(selected.getAttribute('data-rate')) || 0;
+                        const total = daysToCharge * rate;
+                        
+                        totalEl.value = total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+                    }
+                })
+                .catch(err => console.error("Availability check failed", err));
+        }
 
         function lookup(phone) {
             if (!phone) return;
@@ -130,13 +251,11 @@
                 .then(data => {
                     if (Array.isArray(data) && data.length > 0) {
                         registerPrompt.style.display = 'none';
-                        
-                        if (data.length === 1 && data[0].phone === phone) {
-                            const item = data[0];
-                            nameInput.value = item.name || '';
-                            emailInput.value = item.email || '';
+                        const matchedUser = data.find(item => item.phone === phone || item.Phone === phone || item.contactInfo === phone || item.ContactInfo === phone);
+                        if (matchedUser) {
+                            nameInput.value = matchedUser.name || matchedUser.Name || '';
+                            emailInput.value = matchedUser.email || matchedUser.Email || '';
                             hideSuggestions();
-                            calculateTotal();
                             return;
                         }
                         renderSuggestions(data);
@@ -144,33 +263,22 @@
                         hideSuggestions();
                         nameInput.value = '';
                         emailInput.value = '';
-                        
                         if (phone.length === 10) {
                             registerLink.href = '/Guest/Create?phone=' + encodeURIComponent(phone);
                             registerPrompt.style.display = 'block';
                         }
                     }
                 })
-                .catch(() => {
+                .catch(err => {
                     hideSuggestions();
-                    if (phone.length === 10) {
-                        registerLink.href = '/Guest/Create?phone=' + encodeURIComponent(phone);
-                        registerPrompt.style.display = 'block';
-                    }
                 });
         }
 
         phoneInput.addEventListener('input', function () {
             clearTimeout(timeout);
             const val = this.value.trim();
-            
             registerPrompt.style.display = 'none';
-            
-            if (!val) {
-                hideSuggestions();
-                return;
-            }
-            
+            if (!val) { hideSuggestions(); return; }
             timeout = setTimeout(() => lookup(val), 300);
         });
 
@@ -178,84 +286,37 @@
             if (e.key === 'Enter') {
                 e.preventDefault();
                 const val = this.value.trim();
-                if (val.length === 10) {
-                    lookup(val);
-                } else {
-                    this.reportValidity();
-                }
+                if (val.length === 10) lookup(val);
+                else this.reportValidity();
             }
         });
 
         document.addEventListener('click', function (e) {
-            if (!phoneInput.contains(e.target) && !suggestionsEl.contains(e.target)) {
-                hideSuggestions();
-            }
+            if (!phoneInput.contains(e.target) && !suggestionsEl.contains(e.target)) hideSuggestions();
         });
 
         function renderSuggestions(list) {
             suggestionsEl.innerHTML = '';
             if (!list || list.length === 0) { hideSuggestions(); return; }
-            
             list.forEach(item => {
                 const el = document.createElement('button');
                 el.type = 'button';
                 el.className = 'list-group-item list-group-item-action text-start';
-                
-                el.innerHTML = `<strong>${item.phone}</strong> <span class="text-muted ms-2">— ${item.name || ''}</span>`;
-                
+                const itemPhone = item.phone || item.Phone || item.contactInfo || item.ContactInfo;
+                const itemName = item.name || item.Name || '';
+                const itemEmail = item.email || item.Email || '';
+                el.innerHTML = `<strong>${itemPhone}</strong> <span class="text-muted ms-2">— ${itemName}</span>`;
                 el.addEventListener('click', function () {
-                    phoneInput.value = item.phone;
-                    nameInput.value = item.name || '';
-                    emailInput.value = item.email || '';
+                    phoneInput.value = itemPhone;
+                    nameInput.value = itemName;
+                    emailInput.value = itemEmail;
                     hideSuggestions();
-                    calculateTotal();
                 });
                 suggestionsEl.appendChild(el);
             });
             suggestionsEl.style.display = 'block';
         }
 
-        function hideSuggestions() {
-            suggestionsEl.style.display = 'none';
-        }
-
-        function calculateTotal() {
-            if (!checkInEl.value || !checkOutEl.value || !roomSelect.value) {
-                bookBtn.disabled = true;
-                return;
-            }
-            
-            const checkIn = new Date(checkInEl.value);
-            const checkOut = new Date(checkOutEl.value);
-            
-            const diffTime = checkOut - checkIn;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays > 0) {
-                
-                const selected = roomSelect.options[roomSelect.selectedIndex];
-                const rate = parseFloat(selected.getAttribute('data-rate')) || 0;
-                const total = diffDays * rate;
-                
-                totalEl.value = total.toLocaleString('en-IN', {
-                    style: 'currency',
-                    currency: 'INR'
-                });
-                
-                dateError.style.display = 'none';
-                bookBtn.disabled = false;
-            } else {
-               
-                totalEl.value = "Invalid Dates";
-                dateError.style.display = 'block';
-                bookBtn.disabled = true;
-            }
-        }
-
-        [checkInEl, checkOutEl, roomSelect].forEach(el => {
-            if(el) {
-                el.addEventListener('change', calculateTotal);
-            }
-        });
+        function hideSuggestions() { suggestionsEl.style.display = 'none'; }
     });
 </script>
