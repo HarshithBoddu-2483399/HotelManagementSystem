@@ -1,0 +1,218 @@
+@{
+    ViewData["Title"] = "Book a Stay";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    
+                    <div class="text-center mb-5">
+                        <h2 class="fw-bold text-primary">Plan your vacation with us.</h2>
+                        <p class="text-muted">Select your preferences to find your perfect stay.</p>
+                    </div>
+
+                    <form action="/GuestPortal/SubmitBooking" method="post" class="row g-4">
+                        
+                        <input type="hidden" name="roomId" id="assignedRoomId" />
+                        <input type="hidden" name="checkInDate" id="hiddenCheckIn" />
+                        <input type="hidden" name="checkOutDate" id="hiddenCheckOut" />
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Room Type</label>
+                            <select class="form-select form-select-lg" id="roomTypeSelect" required>
+                                <option value="" disabled selected>-- Select a Room Type --</option>
+                                @if (ViewBag.RoomTypes != null)
+                                {
+                                    foreach (var type in ViewBag.RoomTypes)
+                                    {
+                                        <option value="@type">@type</option>
+                                    }
+                                }
+                            </select>
+                            <div id="timeWarning" class="alert alert-danger mt-3 py-2 mb-0 fw-bold" style="display:none; font-size: 0.95rem;"></div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Check-In</label>
+                            <div class="input-group">
+                                <input id="inDate" class="form-control form-control-lg" type="date" required />
+                                <select id="inTime" class="form-select form-select-lg" required style="max-width: 140px;">
+                                    <option value="" disabled selected>Time</option>
+                                    <option value="00:00">12:00 AM</option>
+                                    <option value="01:00">01:00 AM</option>
+                                    <option value="02:00">02:00 AM</option>
+                                    <option value="03:00">03:00 AM</option>
+                                    <option value="04:00">04:00 AM</option>
+                                    <option value="05:00">05:00 AM</option>
+                                    <option value="06:00">06:00 AM</option>
+                                    <option value="07:00">07:00 AM</option>
+                                    <option value="08:00">08:00 AM</option>
+                                    <option value="09:00">09:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="12:00">12:00 PM</option>
+                                    <option value="13:00">01:00 PM</option>
+                                    <option value="14:00">02:00 PM</option>
+                                    <option value="15:00">03:00 PM</option>
+                                    <option value="16:00">04:00 PM</option>
+                                    <option value="17:00">05:00 PM</option>
+                                    <option value="18:00">06:00 PM</option>
+                                    <option value="19:00">07:00 PM</option>
+                                    <option value="20:00">08:00 PM</option>
+                                    <option value="21:00">09:00 PM</option>
+                                    <option value="22:00">10:00 PM</option>
+                                    <option value="23:00">11:00 PM</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Check-Out</label>
+                            <div class="input-group">
+                                <input id="outDate" class="form-control form-control-lg" type="date" required />
+                                <select id="outTime" class="form-select form-select-lg" required style="max-width: 140px;">
+                                    <option value="" disabled selected>Time</option>
+                                    <option value="00:00">12:00 AM</option>
+                                    <option value="01:00">01:00 AM</option>
+                                    <option value="02:00">02:00 AM</option>
+                                    <option value="03:00">03:00 AM</option>
+                                    <option value="04:00">04:00 AM</option>
+                                    <option value="05:00">05:00 AM</option>
+                                    <option value="06:00">06:00 AM</option>
+                                    <option value="07:00">07:00 AM</option>
+                                    <option value="08:00">08:00 AM</option>
+                                    <option value="09:00">09:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="12:00">12:00 PM</option>
+                                    <option value="13:00">01:00 PM</option>
+                                    <option value="14:00">02:00 PM</option>
+                                    <option value="15:00">03:00 PM</option>
+                                    <option value="16:00">04:00 PM</option>
+                                    <option value="17:00">05:00 PM</option>
+                                    <option value="18:00">06:00 PM</option>
+                                    <option value="19:00">07:00 PM</option>
+                                    <option value="20:00">08:00 PM</option>
+                                    <option value="21:00">09:00 PM</option>
+                                    <option value="22:00">10:00 PM</option>
+                                    <option value="23:00">11:00 PM</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mt-4">
+                            <label class="form-label fw-bold text-success">Estimated Total</label>
+                            <input id="totalPrice" class="form-control form-control-lg bg-light text-success fw-bold" type="text" readonly placeholder="₹0.00" />
+                            <small id="dateError" class="text-danger mt-1" style="display:none; font-weight:500;">Check-Out must be after Check-In.</small>
+                        </div>
+
+                        <div class="col-12 mt-5 text-center">
+                            <button id="bookBtn" type="submit" class="btn btn-primary btn-lg px-5 py-3 shadow w-100 fw-bold fs-5" disabled>
+                                Confirm & Book Now
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const roomTypeSelect = document.getElementById('roomTypeSelect');
+        const inDate = document.getElementById('inDate');
+        const inTime = document.getElementById('inTime');
+        const outDate = document.getElementById('outDate');
+        const outTime = document.getElementById('outTime');
+        
+        const hiddenCheckIn = document.getElementById('hiddenCheckIn');
+        const hiddenCheckOut = document.getElementById('hiddenCheckOut');
+        const assignedRoomId = document.getElementById('assignedRoomId');
+        
+        const totalEl = document.getElementById('totalPrice');
+        const bookBtn = document.getElementById('bookBtn');
+        const dateError = document.getElementById('dateError');
+        const timeWarning = document.getElementById('timeWarning');
+
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        inDate.min = `${yyyy}-${mm}-${dd}`;
+
+        inDate.addEventListener('change', function() {
+            outDate.min = this.value;
+            if (outDate.value && outDate.value < this.value) {
+                outDate.value = this.value;
+            }
+        });
+
+        [inDate, inTime, outDate, outTime, roomTypeSelect].forEach(el => {
+            if(el) el.addEventListener('change', validateAvailabilityAndTotal);
+        });
+
+        function validateAvailabilityAndTotal() {
+            if (!inDate.value || !inTime.value || !outDate.value || !outTime.value || !roomTypeSelect.value) {
+                bookBtn.disabled = true;
+                return;
+            }
+
+            const checkInStr = `${inDate.value}T${inTime.value}:00`;
+            const checkOutStr = `${outDate.value}T${outTime.value}:00`;
+            
+            hiddenCheckIn.value = checkInStr;
+            hiddenCheckOut.value = checkOutStr;
+
+            const checkIn = new Date(checkInStr);
+            const checkOut = new Date(checkOutStr);
+            const diffTime = checkOut - checkIn;
+
+            if (diffTime <= 0) {
+                totalEl.value = "Invalid Dates";
+                dateError.style.display = 'block';
+                bookBtn.disabled = true;
+                return;
+            }
+
+            dateError.style.display = 'none';
+
+            const diffHours = diffTime / (1000 * 60 * 60);
+            let daysToCharge = 0;
+
+            if (diffHours <= 24) {
+                daysToCharge = 1;
+            } else {
+                const fullDays = Math.floor(diffHours / 24);
+                const extraHours = diffHours % 24;
+                daysToCharge = fullDays;
+                if (extraHours > 0 && extraHours <= 6) daysToCharge += 0.5;
+                else if (extraHours > 6) daysToCharge += 1;
+            }
+
+            const url = `/GuestPortal/CheckTypeAvailability?roomType=${encodeURIComponent(roomTypeSelect.value)}&checkIn=${checkInStr}&checkOut=${checkOutStr}`;
+            
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if(!data.available) {
+                        timeWarning.innerText = data.message;
+                        timeWarning.style.display = 'block';
+                        bookBtn.disabled = true;
+                        totalEl.value = "Not Available";
+                    } else {
+                        timeWarning.style.display = 'none';
+                        bookBtn.disabled = false;
+                        assignedRoomId.value = data.roomId;
+                        
+                        const rate = parseFloat(data.rate) || 0;
+                        const total = daysToCharge * rate;
+                        totalEl.value = total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+                    }
+                })
+                .catch(err => console.error("Availability check failed", err));
+        }
+    });
+</script>

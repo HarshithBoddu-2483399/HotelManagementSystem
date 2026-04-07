@@ -135,5 +135,20 @@ namespace HotelManagementSystem.Controllers
 
             return View(new AssignRoomViewModel { Room = room, MatchingArrivals = matchingArrivals });
         }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin,Manager,Receptionist")]
+        public IActionResult ForceResetGuestPassword(int guestId)
+        {
+            var guest = _context.Guests.Find(guestId);
+            if (guest != null)
+            {
+                guest.Password = "Hotel@1234";
+                guest.RequiresPasswordReset = true; // <-- Flip the switch!
+                _context.SaveChanges();
+                TempData["SuccessMessage"] = $"Password for {guest.Name} has been reset to: Hotel@1234";
+            }
+            return RedirectToAction("Index");
+        }
     }
 }

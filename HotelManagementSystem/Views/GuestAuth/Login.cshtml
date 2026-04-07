@@ -1,0 +1,42 @@
+@{
+    ViewData["Title"] = "Guest Login";
+    Layout = "_Layout"; // Or whichever layout file you use
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow border-0 rounded-4 p-4">
+                <div class="text-center mb-4">
+                    <i class="bi bi-building text-primary" style="font-size: 3rem;"></i>
+                    <h3 class="fw-bold mt-2">Guest Portal</h3>
+                    <p class="text-muted">Manage your bookings and receipts.</p>
+                </div>
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger text-center">
+                        <i class="bi bi-exclamation-triangle-fill"></i> @ViewBag.Error
+                    </div>
+                }
+
+                <form action="/GuestAuth/Login" method="post">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email Address</label>
+                        <input type="email" name="email" class="form-control form-control-lg" placeholder="Enter the email used for booking" required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Phone Number</label>
+                        <input type="text" name="phone" class="form-control form-control-lg" placeholder="10-digit registered number" maxlength="10" required />
+                        <small class="text-muted">Your phone number acts as your password.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
+                        Access My Bookings
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

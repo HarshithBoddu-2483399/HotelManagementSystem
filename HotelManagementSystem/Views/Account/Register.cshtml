@@ -1,0 +1,163 @@
+﻿@model HotelManagementSystem.ViewModels.GuestRegisterViewModel
+
+@{
+    ViewData["Title"] = "Guest Registration";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-primary">Create an Account</h2>
+                        <p class="text-muted">Join us to manage your bookings and receipts.</p>
+                    </div>
+
+                    <form asp-controller="Account" asp-action="Register" method="post" id="registerForm">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Full Name</label>
+                            <input type="text" name="Name" class="form-control form-control-lg" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email Address</label>
+                            <input type="email" id="emailInput" name="Email" class="form-control form-control-lg" placeholder="name@example.com" required />
+                            <small id="emailError" class="text-danger fw-bold mt-1" style="display:none;">
+                                Already user with this mail id exists.
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Phone Number</label>
+                            <input type="text" id="phoneInput" name="Phone" class="form-control form-control-lg" pattern="\d{10}" title="Exactly 10 digits required" placeholder="10-digit number" maxlength="10" required />
+                            <small id="phoneError" class="text-danger fw-bold mt-1" style="display:none;">
+                                Phone no you are trying has already acc with us trying resetting password.
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-success">4-Digit Account Recovery PIN</label>
+                            <input type="text" name="RecoveryPin" class="form-control form-control-lg border-success" pattern="\d{4}" maxlength="4" placeholder="e.g. 1234" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required />
+                            <small class="text-muted">You will need this PIN to reset your password if you forget it!</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Password</label>
+                            <input type="password" id="passInput" name="Password" class="form-control form-control-lg" minlength="6" required />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Re-enter Password</label>
+                            <input type="password" id="confirmPassInput" name="ConfirmPassword" class="form-control form-control-lg" minlength="6" required />
+                            <small id="passError" class="text-danger fw-bold mt-1" style="display:none;">
+                                Passwords do not match.
+                            </small>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
+                            Sign Up
+                        </button>
+                        
+                        <div class="text-center mt-4">
+                            <p class="text-muted">Already have an account? <a href="/Account/Login" class="text-decoration-none fw-bold">Log in here</a></p>
+                        </div>
+
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <p class="text-muted mb-1">Booked at the front desk? <a href="/Account/ClaimAccount" class="fw-bold">Claim your account</a></p>
+                        <p class="text-muted">Don't have an account? <a href="/Account/Register" class="fw-bold">Sign up here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const emailInput = document.getElementById('emailInput');
+        const phoneInput = document.getElementById('phoneInput');
+        const emailError = document.getElementById('emailError');
+        const phoneError = document.getElementById('phoneError');
+        
+        const passInput = document.getElementById('passInput');
+        const confirmPassInput = document.getElementById('confirmPassInput');
+        const passError = document.getElementById('passError');
+        const submitBtn = document.getElementById('submitBtn');
+
+        let isEmailValid = true;
+        let isPhoneValid = true;
+
+        // Form logic to disable button if things are invalid
+        function updateSubmitButton() {
+            if (!isEmailValid || !isPhoneValid || (passInput.value !== confirmPassInput.value && confirmPassInput.value !== "")) {
+                submitBtn.disabled = true;
+            } else {
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Live Email Check
+        emailInput.addEventListener('blur', function() {
+            if (this.value) {
+                fetch(`/Account/CheckEmail?email=${encodeURIComponent(this.value)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.exists) {
+                            emailError.style.display = 'block';
+                            emailInput.classList.add('is-invalid');
+                            isEmailValid = false;
+                        } else {
+                            emailError.style.display = 'none';
+                            emailInput.classList.remove('is-invalid');
+                            isEmailValid = true;
+                        }
+                        updateSubmitButton();
+                    });
+            }
+        });
+
+        // Live Phone Check (Forces numbers only)
+        phoneInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, ''); // Instantly removes letters
+        });
+
+        phoneInput.addEventListener('blur', function() {
+            if (this.value.length === 10) {
+                fetch(`/Account/CheckPhone?phone=${encodeURIComponent(this.value)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.exists) {
+                            phoneError.style.display = 'block';
+                            phoneInput.classList.add('is-invalid');
+                            isPhoneValid = false;
+                        } else {
+                            phoneError.style.display = 'none';
+                            phoneInput.classList.remove('is-invalid');
+                            isPhoneValid = true;
+                        }
+                        updateSubmitButton();
+                    });
+            }
+        });
+
+        // Password Match Check
+        const checkPasswords = () => {
+            if (confirmPassInput.value && passInput.value !== confirmPassInput.value) {
+                passError.style.display = 'block';
+                confirmPassInput.classList.add('is-invalid');
+            } else {
+                passError.style.display = 'none';
+                confirmPassInput.classList.remove('is-invalid');
+            }
+            updateSubmitButton();
+        };
+
+        passInput.addEventListener('input', checkPasswords);
+        confirmPassInput.addEventListener('input', checkPasswords);
+    });
+</script>

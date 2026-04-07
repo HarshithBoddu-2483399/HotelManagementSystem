@@ -1,17 +1,22 @@
-using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using HotelManagementSystem.Services;
 using HotelManagementSystem.Models;
+using HotelManagementSystem.Services;
+using HotelManagementSystem.Data;   
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace HotelManagementSystem.Controllers
 {
     public class GuestController : Controller
     {
         private readonly IGuestService _guestService;
+        private readonly ApplicationDbContext _context;
 
-        public GuestController(IGuestService guestService)
+        public GuestController(IGuestService guestService, ApplicationDbContext context)
         {
             _guestService = guestService;
+            _context = context;
         }
 
         [HttpGet]
@@ -76,6 +81,28 @@ namespace HotelManagementSystem.Controllers
             }
 
             return Json(null);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin,Manager,Receptionist")] // Only staff can do this!
+        public IActionResult ForceResetGuestPassword(int guestId)
+        {
+            var guest = _context.Guests.Find(guestId);
+            if (guest != null)
+            {
+                // 1. Change password to default
+                guest.Password = "Hotel@1234";
+
+                // 2. Flip the switch so they MUST change it on their next login
+                guest.RequiresPasswordReset = true;
+
+                _context.SaveChanges();
+
+                TempData["Success"] = $"Success! Password for {guest.Name} has been reset to: Hotel@1234";
+            }
+
+            // Refresh the guest list page
+            return RedirectToAction("Index");
         }
     }
 }

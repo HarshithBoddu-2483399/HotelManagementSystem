@@ -14,6 +14,7 @@
                     <th>Name</th>
                     <th>Email</th>
                     <th>Contact</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -24,6 +25,14 @@
                         <td>@g.Name</td>
                         <td>@g.Email</td>
                         <td>@g.ContactInfo</td>
+                        <td>
+                            <form action="/Guest/ForceResetGuestPassword" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to force reset the password for @g.Name to Hotel@1234?');">
+                                <input type="hidden" name="guestId" value="@g.GuestId" />
+                                <button type="submit" class="btn btn-sm btn-outline-warning fw-bold">
+                                    <i class="bi bi-key"></i> Force Reset Pass
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                 }
             </tbody>

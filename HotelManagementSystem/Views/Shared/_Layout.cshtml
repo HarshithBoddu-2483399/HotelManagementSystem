@@ -25,6 +25,10 @@
             {
                 <a class="navbar-brand" asp-controller="Manager" asp-action="Index">HotelMS (Manager)</a>
             }
+            else if (User.IsInRole("Housekeeping"))
+            {
+                <a class="navbar-brand" asp-controller="Manager" asp-action="Index">HotelMS (Staff)</a>
+            }
             else
             {
                 <a class="navbar-brand" href="/">HotelMS</a>
@@ -158,6 +162,19 @@
                             </ul>
                         </li>
                     }
+
+                    @* --- GUEST PORTAL ONLY MENU --- *@
+                    <ul class="navbar-nav flex-grow-1">
+                    @if (User.IsInRole("Guest"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold" asp-controller="GuestPortal" asp-action="Index">My Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-bold" asp-controller="GuestPortal" asp-action="BookRoom">Book a Room</a>
+                        </li>
+                    }
+                    </ul>
 
                     @* --- AUTHENTICATION --- *@
                     @if (User.Identity.IsAuthenticated)

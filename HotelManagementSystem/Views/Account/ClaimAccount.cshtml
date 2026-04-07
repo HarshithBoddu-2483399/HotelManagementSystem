@@ -1,0 +1,94 @@
+﻿@model HotelManagementSystem.ViewModels.ClaimAccountViewModel
+
+@{
+    ViewData["Title"] = "Claim Account";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-primary">Claim Your Account</h2>
+                        <p class="text-muted">Booked at the front desk? Enter your details below to set up your online portal access.</p>
+                    </div>
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger text-center fw-bold">
+                            <i class="bi bi-exclamation-triangle-fill"></i> @ViewBag.Error
+                        </div>
+                    }
+
+                    <form action="/Account/ClaimAccount" method="post">
+                        
+                        <div class="mb-4 p-3 bg-light border rounded">
+                            <label class="form-label fw-bold text-dark">Reservation ID</label>
+                            <input type="number" name="ReservationId" class="form-control form-control-lg border-primary" placeholder="e.g., 104" required />
+                            <small class="text-muted">You can find this on your email receipt or paper invoice.</small>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Registered Email</label>
+                                <input type="email" name="Email" class="form-control form-control-lg" placeholder="name@example.com" required />
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label fw-bold">Registered Phone</label>
+                                <input type="text" name="Phone" class="form-control form-control-lg" pattern="\d{10}" title="Exactly 10 digits required" placeholder="10-digit number" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required />
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">New Password</label>
+                                <input type="password" id="newPass" name="NewPassword" class="form-control form-control-lg" minlength="6" required />
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <label class="form-label fw-bold">Confirm Password</label>
+                                <input type="password" id="confirmPass" name="ConfirmNewPassword" class="form-control form-control-lg" minlength="6" required />
+                                <small id="passError" class="text-danger fw-bold mt-1" style="display:none;">Passwords do not match.</small>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
+                            Verify & Set Password
+                        </button>
+                        
+                        <div class="text-center mt-4">
+                            <a href="/Account/Login" class="text-decoration-none text-muted"><i class="bi bi-arrow-left"></i> Back to Login</a>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Quick script to ensure passwords match before submitting
+    document.addEventListener('DOMContentLoaded', function () {
+        const newPass = document.getElementById('newPass');
+        const confirmPass = document.getElementById('confirmPass');
+        const passError = document.getElementById('passError');
+        const submitBtn = document.getElementById('submitBtn');
+
+        const checkPasswords = () => {
+            if (confirmPass.value && newPass.value !== confirmPass.value) {
+                passError.style.display = 'block';
+                confirmPass.classList.add('is-invalid');
+                submitBtn.disabled = true;
+            } else {
+                passError.style.display = 'none';
+                confirmPass.classList.remove('is-invalid');
+                submitBtn.disabled = false;
+            }
+        };
+
+        newPass.addEventListener('input', checkPasswords);
+        confirmPass.addEventListener('input', checkPasswords);
+    });
+</script>

@@ -16,20 +16,37 @@ namespace HotelManagementSystem.Services
 
         public async Task<User> Authenticate(string username, string password)
         {
+            // 1. Check Hardcoded Staff (For testing)
             if (username == "admin@hotel.com" && password == "Admin@123")
             {
-                return new User { Username = "admin@hotel.com", Role = "Admin" };
+                return new User { Username = "admin@hotel.com", Role = "Admin", UserId = 0 };
             }
 
             if (username == "manager@hotel.com" && password == "Manager@123")
             {
-                return new User { Username = "manager@hotel.com", Role = "Manager" };
+                return new User { Username = "manager@hotel.com", Role = "Manager", UserId = 0 };
             }
 
-            var user = _context.Users.FirstOrDefault(u =>
-                u.Username == username && u.Password == password);
+            // 2. Check the Staff / Users table
+            var staffUser = _context.Users.FirstOrDefault(u => u.Username == username && u.Password == password);
+            if (staffUser != null)
+            {
+                return staffUser;
+            }
 
-            return user;
+            // GUESTS CHECKS 
+            var guestUser = _context.Guests.FirstOrDefault(g => g.Email == username && g.Password == password);
+            if (guestUser != null)
+            {
+                return new User
+                {
+                    UserId = guestUser.GuestId,
+                    Username = guestUser.Email,
+                    Role = "Guest"
+                };
+            }
+
+            return null;
         }
     }
 }

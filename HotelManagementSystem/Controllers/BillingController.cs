@@ -92,6 +92,20 @@ namespace HotelManagementSystem.Controllers
         public IActionResult ViewInvoice(int reservationId)
         {
             var invoice = _billingService.GetInvoiceByReservation(reservationId);
+            if (invoice == null)
+            {
+                return NotFound("Invoice not found.");
+            }
+
+            var res = _context.Reservations.Find(reservationId);
+
+            if (res != null)
+            {
+                ViewBag.Reservation = res;
+                ViewBag.Room = _context.Rooms.Find(res.RoomId);
+                ViewBag.Guest = _context.Guests.Find(res.GuestId);
+            }
+
             return View("Receipt", invoice);
         }
 
