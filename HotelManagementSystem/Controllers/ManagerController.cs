@@ -8,6 +8,7 @@ using HotelManagementSystem.Data;
 
 namespace HotelManagementSystem.Controllers
 {
+    // Keeping Admin here just in case the Admin wants to help the Manager assign rooms
     [Authorize(Roles = "Manager,Admin")]
     public class ManagerController : Controller
     {
@@ -18,33 +19,6 @@ namespace HotelManagementSystem.Controllers
         {
             _managerService = managerService;
             _context = context;
-        }
-
-        // --- STAFF MANAGEMENT ---
-        [HttpGet]
-        public IActionResult StaffList()
-        {
-            return View(_managerService.GetAllStaff());
-        }
-
-        [HttpGet]
-        public IActionResult AddStaff()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public IActionResult AddStaff(User staff)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Users.Add(staff);
-                _context.SaveChanges();
-
-
-                return RedirectToAction("StaffList");
-            }
-            return View(staff);
         }
 
         public IActionResult Index()
@@ -84,47 +58,6 @@ namespace HotelManagementSystem.Controllers
         {
             _managerService.AssignStaffToTask(taskId, staffId, targetDate, deadlineTime);
             return RedirectToAction("Housekeeping");
-        }
-
-        [HttpGet]
-        public IActionResult EditStaff(int userId)
-        {
-            var staff = _managerService.GetStaffById(userId);
-            if (staff == null) return RedirectToAction("StaffList");
-            return View(staff);
-        }
-
-        [HttpPost]
-        public IActionResult EditStaff(User staff)
-        {
-            _managerService.UpdateStaff(staff);
-            return RedirectToAction("StaffList");
-        }
-
-        [HttpPost]
-        public IActionResult DeleteStaff(int userId)
-        {
-            _managerService.DeleteStaff(userId);
-            return RedirectToAction("StaffList");
-        }
-
-        [HttpGet]
-        public IActionResult Attendance(DateTime? date = null)
-        {
-            var selectedDate = date ?? DateTime.Today;
-            var data = _managerService.GetAttendanceByDate(selectedDate);
-            return View(data);
-        }
-
-        [HttpPost]
-        public IActionResult MarkAttendance(int userId, DateTime selectedDate, bool isPresent)
-        {
-            if (selectedDate.Date != DateTime.Today)
-            {
-                return RedirectToAction("Attendance", new { date = selectedDate.ToString("yyyy-MM-dd") });
-            }
-            _managerService.MarkAttendance(userId, selectedDate, isPresent);
-            return RedirectToAction("Attendance", new { date = selectedDate.ToString("yyyy-MM-dd") });
         }
     }
 }

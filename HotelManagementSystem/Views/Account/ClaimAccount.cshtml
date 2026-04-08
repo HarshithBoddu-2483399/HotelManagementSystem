@@ -41,6 +41,12 @@
                             </div>
                         </div>
 
+                        <div class="mb-4 p-3 bg-light border border-success rounded">
+                            <label class="form-label fw-bold text-success">Create a 4-Digit Recovery PIN</label>
+                            <input type="text" name="RecoveryPin" class="form-control form-control-lg border-success" pattern="\d{4}" maxlength="4" placeholder="e.g. 1234" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required />
+                            <small class="text-muted">You will use this to reset your password if you ever forget it.</small>
+                        </div>
+
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">New Password</label>
@@ -60,7 +66,6 @@
                         <div class="text-center mt-4">
                             <a href="/Account/Login" class="text-decoration-none text-muted"><i class="bi bi-arrow-left"></i> Back to Login</a>
                         </div>
-
                     </form>
                 </div>
             </div>
@@ -69,7 +74,6 @@
 </div>
 
 <script>
-    // Quick script to ensure passwords match before submitting
     document.addEventListener('DOMContentLoaded', function () {
         const newPass = document.getElementById('newPass');
         const confirmPass = document.getElementById('confirmPass');

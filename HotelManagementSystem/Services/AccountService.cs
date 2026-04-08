@@ -16,7 +16,7 @@ namespace HotelManagementSystem.Services
 
         public async Task<User> Authenticate(string username, string password)
         {
-            // 1. Check Hardcoded Staff (For testing)
+            // 1. Check Hardcoded Staff
             if (username == "admin@hotel.com" && password == "Admin@123")
             {
                 return new User { Username = "admin@hotel.com", Role = "Admin", UserId = 0 };
@@ -34,16 +34,21 @@ namespace HotelManagementSystem.Services
                 return staffUser;
             }
 
-            // GUESTS CHECKS 
-            var guestUser = _context.Guests.FirstOrDefault(g => g.Email == username && g.Password == password);
-            if (guestUser != null)
+            // 3. STRICT GUEST CHECK: Email search, then strict BCrypt verification
+            var guestUser = _context.Guests.FirstOrDefault(g => g.Email == username);
+
+            if (guestUser != null && !string.IsNullOrEmpty(guestUser.Password))
             {
-                return new User
+                // Only allows login if the hash matches perfectly
+                if (BCrypt.Net.BCrypt.Verify(password, guestUser.Password))
                 {
-                    UserId = guestUser.GuestId,
-                    Username = guestUser.Email,
-                    Role = "Guest"
-                };
+                    return new User
+                    {
+                        UserId = guestUser.GuestId,
+                        Username = guestUser.Email,
+                        Role = "Guest"
+                    };
+                }
             }
 
             return null;

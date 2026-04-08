@@ -9,7 +9,14 @@ namespace HotelManagementSystem.Models
         [Key] public int InvoiceId { get; set; }
         public int ReservationId { get; set; }
         public DateTime InvoiceDate { get; set; }
-        [Column(TypeName = "decimal(18,2)")] public decimal TotalAmount { get; set; }
-        public string PaymentStatus { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TotalAmount { get; set; }
+
+        public string? PaymentStatus { get; set; }
+
+        // --- Navigation Property for Eager Loading ---
+        [ForeignKey("ReservationId")]
+        public Reservation? Reservation { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using HotelManagementSystem.Services;
 using HotelManagementSystem.Data;
 using System.Linq;
+using Microsoft.EntityFrameworkCore; // Required for .Include()
 
 namespace HotelManagementSystem.Controllers
 {
@@ -11,7 +12,7 @@ namespace HotelManagementSystem.Controllers
     {
         private readonly IBillingService _billingService;
         private readonly IReservationService _resService;
-        private readonly ApplicationDbContext _context; 
+        private readonly ApplicationDbContext _context;
 
         public BillingController(IBillingService billingService, IReservationService resService, ApplicationDbContext context)
         {
@@ -40,14 +41,14 @@ namespace HotelManagementSystem.Controllers
 
             try
             {
-                var reservation = _context.Reservations.Find(reservationId);
+                // Eager Load Room to avoid a second database trip
+                var reservation = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == reservationId);
                 if (reservation != null)
                 {
                     reservation.ReservationStatus = "CHECKED-IN";
-                    var room = _context.Rooms.Find(reservation.RoomId);
-                    if (room != null && room.Status == "AVAILABLE")
+                    if (reservation.Room != null && reservation.Room.Status == "AVAILABLE")
                     {
-                        room.Status = "OCCUPIED";
+                        reservation.Room.Status = "OCCUPIED";
                     }
                     _context.SaveChanges();
                 }
@@ -64,14 +65,14 @@ namespace HotelManagementSystem.Controllers
 
             try
             {
-                var reservation = _context.Reservations.Find(reservationId);
+                // Eager Load Room
+                var reservation = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == reservationId);
                 if (reservation != null)
                 {
                     reservation.ReservationStatus = "CHECKED-OUT";
-                    var room = _context.Rooms.Find(reservation.RoomId);
-                    if (room != null)
+                    if (reservation.Room != null)
                     {
-                        room.Status = "DIRTY"; 
+                        reservation.Room.Status = "DIRTY";
                     }
                     _context.SaveChanges();
                 }
@@ -97,13 +98,17 @@ namespace HotelManagementSystem.Controllers
                 return NotFound("Invoice not found.");
             }
 
-            var res = _context.Reservations.Find(reservationId);
+            // EAGER LOADING: Fetch Reservation, Room, and Guest in ONE trip
+            var res = _context.Reservations
+                .Include(r => r.Room)
+                .Include(r => r.Guest)
+                .FirstOrDefault(r => r.ReservationId == reservationId);
 
             if (res != null)
             {
                 ViewBag.Reservation = res;
-                ViewBag.Room = _context.Rooms.Find(res.RoomId);
-                ViewBag.Guest = _context.Guests.Find(res.GuestId);
+                ViewBag.Room = res.Room;   // Pulled from memory, no DB trip!
+                ViewBag.Guest = res.Guest; // Pulled from memory, no DB trip!
             }
 
             return View("Receipt", invoice);
@@ -116,24 +121,22 @@ namespace HotelManagementSystem.Controllers
 
             try
             {
-                
                 var invoice = _context.Invoices.Find(invoiceId);
                 if (invoice != null)
                 {
-                    var reservation = _context.Reservations.Find(invoice.ReservationId);
+                    var reservation = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == invoice.ReservationId);
                     if (reservation != null)
                     {
                         reservation.ReservationStatus = "CHECKED-OUT";
-                        var room = _context.Rooms.Find(reservation.RoomId);
-                        if (room != null)
+                        if (reservation.Room != null)
                         {
-                            room.Status = "DIRTY"; 
+                            reservation.Room.Status = "DIRTY";
                         }
                         _context.SaveChanges();
                     }
                 }
             }
-            catch { /* Failsafe to ensure the page still loads even if DB update fails */ }
+            catch { /* Failsafe */ }
 
             return RedirectToAction("Index");
         }
