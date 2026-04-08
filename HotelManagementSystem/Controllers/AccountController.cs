@@ -59,7 +59,7 @@ namespace HotelManagementSystem.Controllers
                 return user.Role switch
                 {
                     "Admin" => RedirectToAction("Index", "Report"),
-                    "Manager" => RedirectToAction("Index", "Manager"),
+                    "Manager" => RedirectToAction("Index", "Manager"),  
                     "Housekeeping" => RedirectToAction("StaffIndex", "Housekeeping"),
                     "Receptionist" => RedirectToAction("Index", "Reception"),
                     "Guest" => RedirectToAction("Index", "GuestPortal"),

@@ -16,30 +16,29 @@ namespace HotelManagementSystem.Services
 
         public async Task<User> Authenticate(string username, string password)
         {
-            // 1. Check Hardcoded Staff
+            // 1. Check Hardcoded Default Admin (Keep this so you don't get locked out!)
             if (username == "admin@hotel.com" && password == "Admin@123")
             {
                 return new User { Username = "admin@hotel.com", Role = "Admin", UserId = 0 };
             }
 
-            if (username == "manager@hotel.com" && password == "Manager@123")
+            // 2. STRICT STAFF CHECK: Search by Username (Email), then verify BCrypt hash
+            var staffUser = _context.Users.FirstOrDefault(u => u.Username == username);
+
+            if (staffUser != null && !string.IsNullOrEmpty(staffUser.Password))
             {
-                return new User { Username = "manager@hotel.com", Role = "Manager", UserId = 0 };
+                // If it's the old hardcoded manager, allow it, otherwise check the hash
+                if (staffUser.Password == password || BCrypt.Net.BCrypt.Verify(password, staffUser.Password))
+                {
+                    return staffUser;
+                }
             }
 
-            // 2. Check the Staff / Users table
-            var staffUser = _context.Users.FirstOrDefault(u => u.Username == username && u.Password == password);
-            if (staffUser != null)
-            {
-                return staffUser;
-            }
-
-            // 3. STRICT GUEST CHECK: Email search, then strict BCrypt verification
+            // 3. STRICT GUEST CHECK: Search by Email, then verify BCrypt hash
             var guestUser = _context.Guests.FirstOrDefault(g => g.Email == username);
 
             if (guestUser != null && !string.IsNullOrEmpty(guestUser.Password))
             {
-                // Only allows login if the hash matches perfectly
                 if (BCrypt.Net.BCrypt.Verify(password, guestUser.Password))
                 {
                     return new User
@@ -51,7 +50,7 @@ namespace HotelManagementSystem.Services
                 }
             }
 
-            return null;
+            return null; // Invalid credentials
         }
     }
 }

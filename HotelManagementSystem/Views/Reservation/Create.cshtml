@@ -245,32 +245,31 @@
         }
 
         function lookup(phone) {
-            if (!phone) return;
+            if (phone.length < 3) { hideSuggestions(); return; }
+            
             fetch('/Guest/FindByPhone?phone=' + encodeURIComponent(phone))
-                .then(res => res.status === 200 ? res.json() : [])
+                .then(res => res.json())
                 .then(data => {
-                    if (Array.isArray(data) && data.length > 0) {
-                        registerPrompt.style.display = 'none';
-                        const matchedUser = data.find(item => item.phone === phone || item.Phone === phone || item.contactInfo === phone || item.ContactInfo === phone);
-                        if (matchedUser) {
-                            nameInput.value = matchedUser.name || matchedUser.Name || '';
-                            emailInput.value = matchedUser.email || matchedUser.Email || '';
+                    if (data && data.length > 0) {
+                        // Check if we have an exact 10-digit match
+                        const exactMatch = data.find(g => g.phone === phone);
+                        if (exactMatch) {
+                            nameInput.value = exactMatch.name;
+                            emailInput.value = exactMatch.email;
+                            registerPrompt.style.display = 'none';
                             hideSuggestions();
-                            return;
+                        } else {
+                            renderSuggestions(data);
                         }
-                        renderSuggestions(data);
                     } else {
                         hideSuggestions();
-                        nameInput.value = '';
-                        emailInput.value = '';
                         if (phone.length === 10) {
+                            nameInput.value = '';
+                            emailInput.value = '';
                             registerLink.href = '/Guest/Create?phone=' + encodeURIComponent(phone);
                             registerPrompt.style.display = 'block';
                         }
                     }
-                })
-                .catch(err => {
-                    hideSuggestions();
                 });
         }
 
@@ -282,41 +281,28 @@
             timeout = setTimeout(() => lookup(val), 300);
         });
 
-        phoneInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const val = this.value.trim();
-                if (val.length === 10) lookup(val);
-                else this.reportValidity();
-            }
-        });
-
-        document.addEventListener('click', function (e) {
-            if (!phoneInput.contains(e.target) && !suggestionsEl.contains(e.target)) hideSuggestions();
-        });
-
         function renderSuggestions(list) {
             suggestionsEl.innerHTML = '';
-            if (!list || list.length === 0) { hideSuggestions(); return; }
             list.forEach(item => {
-                const el = document.createElement('button');
-                el.type = 'button';
-                el.className = 'list-group-item list-group-item-action text-start';
-                const itemPhone = item.phone || item.Phone || item.contactInfo || item.ContactInfo;
-                const itemName = item.name || item.Name || '';
-                const itemEmail = item.email || item.Email || '';
-                el.innerHTML = `<strong>${itemPhone}</strong> <span class="text-muted ms-2">— ${itemName}</span>`;
-                el.addEventListener('click', function () {
-                    phoneInput.value = itemPhone;
-                    nameInput.value = itemName;
-                    emailInput.value = itemEmail;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'list-group-item list-group-item-action';
+                btn.innerHTML = `<strong>${item.phone}</strong> - ${item.name}`;
+                btn.onclick = () => {
+                    phoneInput.value = item.phone;
+                    nameInput.value = item.name;
+                    emailInput.value = item.email;
                     hideSuggestions();
-                });
-                suggestionsEl.appendChild(el);
+                };
+                suggestionsEl.appendChild(btn);
             });
             suggestionsEl.style.display = 'block';
         }
 
         function hideSuggestions() { suggestionsEl.style.display = 'none'; }
+        
+        document.addEventListener('click', (e) => {
+            if (!phoneInput.contains(e.target)) hideSuggestions();
+        });
     });
 </script>

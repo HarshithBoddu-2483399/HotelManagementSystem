@@ -88,6 +88,20 @@
             overflow-y: auto;
             background-color: #f4f6f8;
         }
+
+        /* --- ACTIVE STATE HIGHLIGHTS --- */
+        .active-item {
+            background-color: rgba(255, 255, 255, 0.2) !important;
+            color: #ffffff !important;
+            font-weight: bold;
+            border-left: 4px solid #3498db;
+            padding-left: 11px !important; 
+        }
+        
+        .active-parent {
+            color: #ffffff !important;
+            background-color: rgba(0,0,0,0.15); 
+        }
         
         .main-container { padding: 28px; max-width: 1200px; margin: 0 auto; }
     </style>
@@ -250,15 +264,10 @@
                 else if (User.IsInRole("Housekeeping"))
                 {
                     <li>
-                        <a href="#hkWork" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-broom me-3"></i> My Work</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="hkWork">
                             <li><a class="sidebar-link text-warning fw-bold" asp-controller="Housekeeping" asp-action="StaffIndex"><i class="bi bi-broom me-2"></i> My Daily Tasks</a></li>
                             <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="History"><i class="bi bi-clock-history me-2"></i> Cleaning History</a></li>
                             <li><a class="sidebar-link text-info" asp-controller="Housekeeping" asp-action="PerformanceReport"><i class="bi bi-award me-2"></i> Performance Report</a></li>
-                        </ul>
+                        
                     </li>
                 }
                 else if (User.IsInRole("Guest"))
@@ -295,7 +304,51 @@
 
     </div>
 
-    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js">    
+    document.addEventListener("DOMContentLoaded", function ()
+    {
+            // 1. Get the current page URL path (e.g., /Reservation/Create)
+            var currentPath = window.location.pathname.toLowerCase();
+
+            // 2. Find all the links inside the sidebar
+            var sidebarLinks = document.querySelectorAll('.sidebar-menu a.sidebar-link');
+
+            sidebarLinks.forEach(function(link) 
+            {
+                var href = link.getAttribute('href');
+                if (href && href !== '#') 
+                {
+                    var linkPath = href.toLowerCase();
+
+                    // 3. Check if the current URL matches this link's URL
+                    if (currentPath === linkPath || (linkPath !== '/' && currentPath.startsWith(linkPath))) 
+                    {
+                        
+                        // Highlight the actual item they clicked
+                        link.classList.add('active-item');
+
+                        // 4. Look to see if this link is hiding inside a dropdown folder
+                        var parentCollapse = link.closest('.collapse');
+                        
+                        if (parentCollapse) 
+                        {
+                            // Force the Bootstrap dropdown to stay open!
+                            parentCollapse.classList.add('show'); 
+                            
+                            // Find the folder title (e.g., "Bookings") and rotate the arrow down
+                            var toggleId = parentCollapse.getAttribute('id');
+                            var toggleLink = document.querySelector('[href="#' + toggleId + '"]');
+                            if (toggleLink) 
+                            {
+                                toggleLink.setAttribute('aria-expanded', 'true');
+                                toggleLink.classList.add('active-parent');
+                            }
+                        }
+                    }
+                }
+            });
+     });
+    </script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>
