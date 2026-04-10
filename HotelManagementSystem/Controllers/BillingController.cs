@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using HotelManagementSystem.Services;
 using HotelManagementSystem.Data;
 using System.Linq;
-using Microsoft.EntityFrameworkCore; // Required for .Include()
+using Microsoft.EntityFrameworkCore;
+using HotelManagementSystem.Models;
+using System;
 
 namespace HotelManagementSystem.Controllers
 {
@@ -41,7 +43,6 @@ namespace HotelManagementSystem.Controllers
 
             try
             {
-                // Eager Load Room to avoid a second database trip
                 var reservation = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == reservationId);
                 if (reservation != null)
                 {
@@ -65,7 +66,6 @@ namespace HotelManagementSystem.Controllers
 
             try
             {
-                // Eager Load Room
                 var reservation = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == reservationId);
                 if (reservation != null)
                 {
@@ -73,6 +73,39 @@ namespace HotelManagementSystem.Controllers
                     if (reservation.Room != null)
                     {
                         reservation.Room.Status = "DIRTY";
+
+                        // ---> FIX 1: Aggressively grab all pending tasks for this room to prevent duplicates
+                        var pendingTasks = _context.HousekeepingTasks
+                            .Where(t => t.RoomId == reservation.RoomId && t.TaskStatus == "PENDING")
+                            .ToList();
+
+                        HousekeepingTask taskToKeep;
+
+                        if (pendingTasks.Any())
+                        {
+                            // Keep the first one found
+                            taskToKeep = pendingTasks.First();
+
+                            // If there are duplicates, delete them immediately
+                            if (pendingTasks.Count > 1)
+                            {
+                                var duplicateTasks = pendingTasks.Skip(1).ToList();
+                                _context.HousekeepingTasks.RemoveRange(duplicateTasks);
+                            }
+                        }
+                        else
+                        {
+                            // Create a new one if absolutely none exist
+                            taskToKeep = new HousekeepingTask
+                            {
+                                RoomId = reservation.RoomId,
+                                TaskStatus = "PENDING"
+                            };
+                            _context.HousekeepingTasks.Add(taskToKeep);
+                        }
+
+                        // ---> FIX 2: Use the SCHEDULED CheckOutDate from the booking, NOT DateTime.Now
+                        taskToKeep.CheckoutTime = reservation.CheckOutDate;
                     }
                     _context.SaveChanges();
                 }
@@ -98,7 +131,6 @@ namespace HotelManagementSystem.Controllers
                 return NotFound("Invoice not found.");
             }
 
-            // EAGER LOADING: Fetch Reservation, Room, and Guest in ONE trip
             var res = _context.Reservations
                 .Include(r => r.Room)
                 .Include(r => r.Guest)
@@ -107,8 +139,8 @@ namespace HotelManagementSystem.Controllers
             if (res != null)
             {
                 ViewBag.Reservation = res;
-                ViewBag.Room = res.Room;   // Pulled from memory, no DB trip!
-                ViewBag.Guest = res.Guest; // Pulled from memory, no DB trip!
+                ViewBag.Room = res.Room;
+                ViewBag.Guest = res.Guest;
             }
 
             return View("Receipt", invoice);
@@ -131,6 +163,39 @@ namespace HotelManagementSystem.Controllers
                         if (reservation.Room != null)
                         {
                             reservation.Room.Status = "DIRTY";
+
+                            // ---> FIX 1: Aggressively grab all pending tasks for this room to prevent duplicates
+                            var pendingTasks = _context.HousekeepingTasks
+                                .Where(t => t.RoomId == reservation.RoomId && t.TaskStatus == "PENDING")
+                                .ToList();
+
+                            HousekeepingTask taskToKeep;
+
+                            if (pendingTasks.Any())
+                            {
+                                // Keep the first one found
+                                taskToKeep = pendingTasks.First();
+
+                                // If there are duplicates, delete them immediately
+                                if (pendingTasks.Count > 1)
+                                {
+                                    var duplicateTasks = pendingTasks.Skip(1).ToList();
+                                    _context.HousekeepingTasks.RemoveRange(duplicateTasks);
+                                }
+                            }
+                            else
+                            {
+                                // Create a new one if absolutely none exist
+                                taskToKeep = new HousekeepingTask
+                                {
+                                    RoomId = reservation.RoomId,
+                                    TaskStatus = "PENDING"
+                                };
+                                _context.HousekeepingTasks.Add(taskToKeep);
+                            }
+
+                            // ---> FIX 2: Use the SCHEDULED CheckOutDate from the booking, NOT DateTime.Now
+                            taskToKeep.CheckoutTime = reservation.CheckOutDate;
                         }
                         _context.SaveChanges();
                     }

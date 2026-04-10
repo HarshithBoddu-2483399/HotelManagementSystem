@@ -8,7 +8,6 @@ using HotelManagementSystem.Data;
 
 namespace HotelManagementSystem.Controllers
 {
-    // Keeping Admin here just in case the Admin wants to help the Manager assign rooms
     [Authorize(Roles = "Manager,Admin")]
     public class ManagerController : Controller
     {
@@ -56,7 +55,24 @@ namespace HotelManagementSystem.Controllers
         [HttpPost]
         public IActionResult AssignStaffToTask(int taskId, int staffId, DateTime targetDate, TimeSpan deadlineTime)
         {
+            // STRICT VALIDATION: Ensure the assigned time is not past the 1-hour grace period
+            var task = _context.HousekeepingTasks.Find(taskId);
+            if (task != null && task.CheckoutTime.HasValue)
+            {
+                DateTime requiredDeadline = task.CheckoutTime.Value.AddHours(1);
+
+                // Combine the Manager's submitted Date and Time to check the exact moment
+                DateTime assignedDateTime = targetDate.Date.Add(deadlineTime);
+
+                if (assignedDateTime > requiredDeadline)
+                {
+                    TempData["ErrorMessage"] = $"Assignment blocked: Room must be cleaned by {requiredDeadline:dd MMM yyyy, hh:mm tt}.";
+                    return RedirectToAction("Housekeeping");
+                }
+            }
+
             _managerService.AssignStaffToTask(taskId, staffId, targetDate, deadlineTime);
+            TempData["SuccessMessage"] = "Staff assigned successfully.";
             return RedirectToAction("Housekeeping");
         }
     }

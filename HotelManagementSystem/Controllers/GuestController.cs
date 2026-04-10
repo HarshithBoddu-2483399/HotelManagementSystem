@@ -22,15 +22,11 @@ namespace HotelManagementSystem.Controllers
             return View(guests);
         }
 
-        // ==========================================
-        // NEW: API for Phone Lookup (Used by Booking & Register pages)
-        // ==========================================
         [HttpGet]
         public IActionResult FindByPhone(string phone)
         {
             if (string.IsNullOrEmpty(phone)) return Json(new object[] { });
 
-            // Search for guests matching this phone number
             var matches = _context.Guests
                 .Where(g => g.ContactInfo.Contains(phone))
                 .Select(g => new {
@@ -44,9 +40,6 @@ namespace HotelManagementSystem.Controllers
             return Json(matches);
         }
 
-        // ==========================================
-        // NEW: API for Email Lookup (Used by Register page)
-        // ==========================================
         [HttpGet]
         public IActionResult FindByEmail(string email)
         {
@@ -81,7 +74,6 @@ namespace HotelManagementSystem.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Strict duplicate check before saving
                 if (_context.Guests.Any(g => g.Email == guest.Email || g.ContactInfo == guest.ContactInfo))
                 {
                     ViewBag.Error = "This guest is already registered in the system.";
@@ -99,6 +91,33 @@ namespace HotelManagementSystem.Controllers
                 return RedirectToAction("Index");
             }
             return View(guest);
+        }
+
+        [HttpPost]
+        public IActionResult CreateAjax([FromBody] Guest guest)
+        {
+            if (string.IsNullOrEmpty(guest.Name) || string.IsNullOrEmpty(guest.Email) || string.IsNullOrEmpty(guest.ContactInfo))
+            {
+                return Json(new { success = false, message = "Please fill in all fields." });
+            }
+
+            if (_context.Guests.Any(g => g.Email == guest.Email || g.ContactInfo == guest.ContactInfo))
+            {
+                return Json(new { success = false, message = "A guest with this Email or Phone already exists." });
+            }
+
+            guest.Password = BCrypt.Net.BCrypt.HashPassword("Welcome@123");
+            guest.RecoveryPin = BCrypt.Net.BCrypt.HashPassword("1234");
+            guest.RequiresPasswordReset = true;
+
+            _context.Guests.Add(guest);
+            _context.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                guest = new { name = guest.Name, email = guest.Email, phone = guest.ContactInfo }
+            });
         }
 
         [HttpPost]

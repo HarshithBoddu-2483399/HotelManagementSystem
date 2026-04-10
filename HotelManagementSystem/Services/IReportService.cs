@@ -9,5 +9,6 @@ namespace HotelManagementSystem.Services
         DashboardViewModel GetMetrics();
         OccupancyReportViewModel GetOccupancyReport(DateTime? reportDate = null);
         RevenueAnalysisViewModel GetRevenueAnalysis(DateTime? startDate = null, DateTime? endDate = null, string dateRange = "custom");
+        decimal GetRevenueForRange(DateTime start, DateTime end);
     }
 }

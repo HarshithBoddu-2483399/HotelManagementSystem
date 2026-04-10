@@ -57,10 +57,10 @@
         new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['Available', 'Occupied', 'Maintenance'],
+                labels: ['Available', 'Occupied', 'Maintenance' , 'Dirty'],
                 datasets: [{
-                    data: [@Model.RoomsAvailable, @Model.RoomsOccupied, @Model.RoomsMaintenance],
-                    backgroundColor: ['#28a745', '#007bff', '#ffc107']
+                    data: [@Model.RoomsAvailable, @Model.RoomsOccupied, @Model.RoomsMaintenance, @Model.PendingTasks],
+                    backgroundColor: ['#28a745', '#007bff', '#ffc107' , '#dc3545']
                 }]
             },
             options: { responsive: true }

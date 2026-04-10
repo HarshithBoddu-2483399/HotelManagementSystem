@@ -10,6 +10,19 @@
         <a asp-controller="Manager" asp-action="Index" class="btn btn-outline-secondary">Back to Dashboard</a>
     </div>
 
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger fw-bold shadow-sm">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success fw-bold shadow-sm">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
     <div class="card shadow-sm border-0">
         <div class="card-header bg-dark text-white fw-bold">Pending Room Tasks</div>
         <table class="table align-middle mb-0">
@@ -30,8 +43,23 @@
                 }
                 @foreach (var task in Model)
                 {
+                    // Calculate the 1-hour grace period deadline
+                    DateTime? deadline = task.CheckoutTime?.AddHours(1);
+                    string deadlineStr = deadline?.ToString("yyyy-MM-ddTHH:mm:ss");
+                    string maxDate = deadline?.ToString("yyyy-MM-dd");
+
                     <tr>
-                        <td class="fw-bold">Room @task.RoomId</td>
+                        <td class="fw-bold">
+                            Room @task.RoomId
+                            
+                            @if (deadline.HasValue)
+                            {
+                                <br />
+                                <small class="text-danger fw-bold">
+                                    Room must be cleaned by @deadline.Value.ToString("hh:mm tt, dd MMM")
+                                </small>
+                            }
+                        </td>
                         <td><span class="badge bg-warning text-dark">@task.TaskStatus</span></td>
                         <td>
                             <span class="text-muted">
@@ -39,7 +67,7 @@
                             </span>
                         </td>
                         <td>
-                            <form asp-action="AssignStaffToTask" method="post" class="assignment-form d-flex gap-2 align-items-center">
+                            <form asp-action="AssignStaffToTask" method="post" class="assignment-form d-flex gap-2 align-items-center" data-deadline="@deadlineStr">
                                 <input type="hidden" name="taskId" value="@task.TaskId" />
 
                                 <select name="staffId" class="form-select staff-select w-auto" required>
@@ -51,9 +79,38 @@
                                 </select>
 
                                 <input type="date" name="targetDate" class="form-control date-select w-auto"
-                                       value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                                       value="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                       max="@maxDate" required />
 
-                                <input type="time" name="deadlineTime" class="form-control time-select w-auto" required />
+                                <div class="input-group">
+                                    <select id="inTime" name="deadlineTime" class="form-select time-select" required style="max-width: 130px;">
+                                        <option value="" disabled selected>Time</option>
+                                        <option value="00:00">12:00 AM</option>
+                                        <option value="01:00">01:00 AM</option>
+                                        <option value="02:00">02:00 AM</option>
+                                        <option value="03:00">03:00 AM</option>
+                                        <option value="04:00">04:00 AM</option>
+                                        <option value="05:00">05:00 AM</option>
+                                        <option value="06:00">06:00 AM</option>
+                                        <option value="07:00">07:00 AM</option>
+                                        <option value="08:00">08:00 AM</option>
+                                        <option value="09:00">09:00 AM</option>
+                                        <option value="10:00">10:00 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="12:00">12:00 PM</option>
+                                        <option value="13:00">01:00 PM</option>
+                                        <option value="14:00">02:00 PM</option>
+                                        <option value="15:00">03:00 PM</option>
+                                        <option value="16:00">04:00 PM</option>
+                                        <option value="17:00">05:00 PM</option>
+                                        <option value="18:00">06:00 PM</option>
+                                        <option value="19:00">07:00 PM</option>
+                                        <option value="20:00">08:00 PM</option>
+                                        <option value="21:00">09:00 PM</option>
+                                        <option value="22:00">10:00 PM</option>
+                                        <option value="23:00">11:00 PM</option>
+                                    </select>
+                                </div>
 
                                 <button type="submit" class="btn btn-primary btn-sm assign-btn" disabled>Assign</button>
                             </form>
@@ -75,9 +132,9 @@
                 const dateSelect = form.querySelector('.date-select');
                 const timeSelect = form.querySelector('.time-select');
                 const assignBtn = form.querySelector('.assign-btn');
+                const deadlineStr = form.getAttribute('data-deadline'); // Fetch deadline
 
                 const validateForm = () => {
-                    // Button only enables if Staff, Date, and Time are all selected
                     if (staffSelect.value !== "" && dateSelect.value !== "" && timeSelect.value !== "") {
                         assignBtn.removeAttribute('disabled');
                     } else {
@@ -85,12 +142,47 @@
                     }
                 };
 
+                // Logic to disable specific time slots based on the selected date
+                const enforceTimeLimits = () => {
+                    if (!deadlineStr) return;
+
+                    // Parse deadline string safely
+                    const [dDate, dTime] = deadlineStr.split('T');
+                    const [dHours, dMins] = dTime.split(':').map(Number);
+                    const deadlineTotalMins = (dHours * 60) + dMins;
+
+                    const selectedDate = dateSelect.value;
+
+                    // Loop through the dropdown and disable invalid times
+                    Array.from(timeSelect.options).forEach(opt => {
+                        if (!opt.value) return;
+                        
+                        const [h, m] = opt.value.split(':').map(Number);
+                        const optTotalMins = (h * 60) + m;
+
+                        // If the manager picked the deadline day, disable past hours
+                        if (selectedDate === dDate && optTotalMins > deadlineTotalMins) {
+                            opt.disabled = true;
+                            opt.classList.add('text-danger'); // Makes it visually clear it's blocked
+                        } else {
+                            opt.disabled = false;
+                            opt.classList.remove('text-danger');
+                        }
+                    });
+
+                    // If the currently selected time just got disabled, reset the box
+                    if (timeSelect.options[timeSelect.selectedIndex]?.disabled) {
+                        timeSelect.value = "";
+                    }
+                    validateForm();
+                };
+
                 staffSelect.addEventListener('change', validateForm);
-                dateSelect.addEventListener('change', validateForm);
+                dateSelect.addEventListener('change', enforceTimeLimits); // Re-check times if date changes
                 timeSelect.addEventListener('change', validateForm);
                 timeSelect.addEventListener('input', validateForm);
                 
-                validateForm();
+                enforceTimeLimits(); // Run on load
             });
         });
     </script>

@@ -13,6 +13,7 @@ namespace HotelManagementSystem.Models
         public string? TaskStatus { get; set; }
         public DateTime TaskDate { get; set; }
         public DateTime? CompletedAt { get; set; }
+        public DateTime? CheckoutTime { get; set; }
 
     }
 }

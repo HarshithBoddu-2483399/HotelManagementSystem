@@ -53,16 +53,22 @@ namespace HotelManagementSystem.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GuestId"));
 
                     b.Property<string>("ContactInfo")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RecoveryPin")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("RequiresPasswordReset")
+                        .HasColumnType("bit");
 
                     b.HasKey("GuestId");
 
@@ -80,6 +86,9 @@ namespace HotelManagementSystem.Migrations
                     b.Property<int>("AssignedStaffId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("CheckoutTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
@@ -90,7 +99,6 @@ namespace HotelManagementSystem.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("TaskStatus")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("TaskId");
@@ -110,7 +118,6 @@ namespace HotelManagementSystem.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("PaymentStatus")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ReservationId")
@@ -120,6 +127,8 @@ namespace HotelManagementSystem.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("InvoiceId");
+
+                    b.HasIndex("ReservationId");
 
                     b.ToTable("Invoices");
                 });
@@ -174,6 +183,10 @@ namespace HotelManagementSystem.Migrations
 
                     b.HasKey("ReservationId");
 
+                    b.HasIndex("GuestId");
+
+                    b.HasIndex("RoomId");
+
                     b.ToTable("Reservations");
                 });
 
@@ -189,15 +202,12 @@ namespace HotelManagementSystem.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("RoomNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RoomType")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("RoomId");
@@ -234,6 +244,36 @@ namespace HotelManagementSystem.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("HotelManagementSystem.Models.Invoice", b =>
+                {
+                    b.HasOne("HotelManagementSystem.Models.Reservation", "Reservation")
+                        .WithMany()
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reservation");
+                });
+
+            modelBuilder.Entity("HotelManagementSystem.Models.Reservation", b =>
+                {
+                    b.HasOne("HotelManagementSystem.Models.Guest", "Guest")
+                        .WithMany()
+                        .HasForeignKey("GuestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HotelManagementSystem.Models.Room", "Room")
+                        .WithMany()
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guest");
+
+                    b.Navigation("Room");
                 });
 #pragma warning restore 612, 618
         }
