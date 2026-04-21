@@ -104,204 +104,323 @@
         }
         
         .main-container { padding: 28px; max-width: 1200px; margin: 0 auto; }
+
+        /* --- NEW AUTHENTICATION PAGE STYLES --- */
+        .auth-wrapper {
+            background-image: url('/images/hotel-bg.jpg'); /* Adjust if your image name is different */
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: none;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
 
-    <div class="layout-wrapper">
-        
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <a href="/" class="text-white text-decoration-none">
-                    @if (User.IsInRole("Admin")) { <span><i class="bi bi-shield-lock-fill me-2"></i>HotelMS (Admin)</span> }
-                    else if (User.IsInRole("Manager")) { <span><i class="bi bi-briefcase-fill me-2"></i>HotelMS (Manager)</span> }
-                    else if (User.IsInRole("Housekeeping")) { <span><i class="bi bi-stars me-2"></i>HotelMS (Staff)</span> }
-                    else if (User.IsInRole("Receptionist")) { <span><i class="bi bi-telephone-fill me-2"></i>HotelMS (Reception)</span> }
-                    else { <span><i class="bi bi-building me-2"></i>HotelMS</span> }
-                </a>
-            </div>
+    @{
+        // Check if the current page requested to hide the sidebar
+        bool hideSidebar = ViewData["HideSidebar"] as bool? ?? false;
+    }
 
-            <ul class="sidebar-menu">
-                @if (User.IsInRole("Admin"))
-                {
-                    <li><a class="sidebar-link fw-bold" asp-controller="Report" asp-action="Index"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a></li>
-                    <li><a class="sidebar-link fw-bold" asp-controller="Room" asp-action="Index"><i class="bi bi-door-open me-3"></i> Rooms</a></li>
-
-                    <li>
-                        <a href="#adminBookings" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-journal-bookmark me-3"></i> Bookings</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="adminBookings">
-                            <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Create"><i class="bi bi-calendar-plus me-2"></i> New Booking</a></li>
-                            <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Index"><i class="bi bi-calendar-check me-2"></i> All Bookings</a></li>
-                        </ul>
-                    </li>
-
-                    <li>
-                        <a href="#adminGuests" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-people me-3"></i> Guests</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="adminGuests">
-                            <li><a class="sidebar-link" asp-controller="Guest" asp-action="Create"><i class="bi bi-person-plus me-2"></i> Register Guest</a></li>
-                            <li><a class="sidebar-link" asp-controller="Guest" asp-action="Index"><i class="bi bi-person-lines-fill me-2"></i> All Guests</a></li>
-                        </ul>
-                    </li>
-
-                    <li>
-                        <a href="#adminFinance" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-wallet2 me-3"></i> Financials</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="adminFinance">
-                            <li><a class="sidebar-link" asp-controller="Billing" asp-action="Index"><i class="bi bi-cash-coin me-2"></i> Billing Dashboard</a></li>
-                            <li><a class="sidebar-link" asp-controller="Billing" asp-action="AllInvoices"><i class="bi bi-receipt me-2"></i> All Invoices</a></li>
-                        </ul>
-                    </li>
-
-                    
-                    <li>
-                        <a href="#adminHR" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-person-vcard me-3"></i> HR & Staff</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="adminHR">
-                            <li><a class="sidebar-link" asp-controller="StaffDirectory" asp-action="StaffList"><i class="bi bi-people me-2"></i> Staff Directory</a></li>
-                            <li><a class="sidebar-link" asp-controller="StaffDirectory" asp-action="Attendance"><i class="bi bi-calendar2-check me-2"></i> Daily Attendance</a></li>
-                        </ul>
-                    </li>
-
-                    <li>
-                        <a href="#adminHK" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-bucket-fill me-1"></i><i class="bi bi-stars me-2" style="font-size: 0.7rem; vertical-align: top;"></i> Housekeeping</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="adminHK">
-                            <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="Index"><i class="bi bi-clipboard-check me-2"></i> Pending Tasks</a></li>
-                            <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="AllTasks"><i class="bi bi-list-task me-2"></i> All Tasks</a></li>
-                            <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="PerformanceReport"><i class="bi bi-graph-up-arrow me-2"></i> Staff Performance</a></li>
-                        </ul>
-                    </li>
-
-                    <li>
-                        <a href="#adminReports" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-bar-chart me-3"></i> Reports</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="adminReports">
-                            <li><a class="sidebar-link" asp-controller="Report" asp-action="OccupancyReport"><i class="bi bi-building-check me-2"></i> Occupancy Report</a></li>
-                            <li><a class="sidebar-link" asp-controller="Report" asp-action="RevenueAnalysis"><i class="bi bi-currency-dollar me-2"></i> Revenue Analysis</a></li>
-                        </ul>
-                    </li>
-                }
-                else if (User.IsInRole("Manager"))
-                {
-                    <li><a class="sidebar-link fw-bold" asp-controller="Manager" asp-action="Index"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a></li>
-                    <li><a class="sidebar-link fw-bold" asp-controller="Manager" asp-action="Rooms"><i class="bi bi-door-open me-3"></i> Rooms</a></li>
-
-                    <li>
-                        <a href="#mgrAssignments" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-card-checklist me-3"></i> Staff Assignments</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="mgrAssignments">
-                            <li><a class="sidebar-link" asp-controller="Manager" asp-action="Housekeeping"><i class="bi bi-person-lines-fill me-2"></i> Assign Tasks</a></li>
-                            <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="Index"><i class="bi bi-clock-history me-2"></i> View Pending</a></li>
-                            <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="PerformanceReport"><i class="bi bi-graph-up me-2"></i> Performance</a></li>
-                        </ul>
-                    </li>
-
-
-                    <li>
-                        <a href="#mgrReports" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-bar-chart me-3"></i> Reports</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="mgrReports">
-                            <li><a class="sidebar-link" asp-controller="Report" asp-action="OccupancyReport"><i class="bi bi-building-check me-2"></i> Occupancy Report</a></li>
-                            <li><a class="sidebar-link" asp-controller="Report" asp-action="RevenueAnalysis"><i class="bi bi-currency-dollar me-2"></i> Revenue Analysis</a></li>
-                        </ul>
-                    </li>
-                }
-                else if (User.IsInRole("Receptionist"))
-                {
-                    <li><a class="sidebar-link fw-bold" asp-controller="Reception" asp-action="Index"><i class="bi bi-front me-3"></i> Front Desk</a></li>
-
-                    <li>
-                        <a href="#recBookings" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-journal-bookmark me-3"></i> Bookings</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="recBookings">
-                            <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Create"><i class="bi bi-calendar-plus me-2"></i> New Booking</a></li>
-                            <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Index"><i class="bi bi-calendar-check me-2"></i> All Bookings</a></li>
-                        </ul>
-                    </li>
-
-                    <li>
-                        <a href="#recGuests" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-people me-3"></i> Guests</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="recGuests">
-                            <li><a class="sidebar-link" asp-controller="Guest" asp-action="Create"><i class="bi bi-person-plus me-2"></i> Register Guest</a></li>
-                            <li><a class="sidebar-link" asp-controller="Guest" asp-action="Index"><i class="bi bi-person-lines-fill me-2"></i> All Guests</a></li>
-                        </ul>
-                    </li>
-
-                    <li>
-                        <a href="#recFinance" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
-                            <span><i class="bi bi-wallet2 me-3"></i> Financials</span>
-                            <i class="bi bi-chevron-down chevron-icon"></i>
-                        </a>
-                        <ul class="collapse list-unstyled" id="recFinance">
-                            <li><a class="sidebar-link" asp-controller="Billing" asp-action="Index"><i class="bi bi-cash-coin me-2"></i> Billing</a></li>
-                            <li><a class="sidebar-link" asp-controller="Billing" asp-action="AllInvoices"><i class="bi bi-receipt me-2"></i> All Invoices</a></li>
-                        </ul>
-                    </li>
-                }
-                else if (User.IsInRole("Housekeeping"))
-                {
-                    <li>
-                            <li><a class="sidebar-link text-warning fw-bold" asp-controller="Housekeeping" asp-action="StaffIndex"><i class="bi bi-broom me-2"></i> My Daily Tasks</a></li>
-                            <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="History"><i class="bi bi-clock-history me-2"></i> Cleaning History</a></li>
-                            <li><a class="sidebar-link text-info" asp-controller="Housekeeping" asp-action="PerformanceReport"><i class="bi bi-award me-2"></i> Performance Report</a></li>
-                        
-                    </li>
-                }
-                else if (User.IsInRole("Guest"))
-                {
-                    <li><a class="sidebar-link fw-bold" asp-controller="GuestPortal" asp-action="Index"><i class="bi bi-person-circle me-3"></i> My Dashboard</a></li>
-                    <li><a class="sidebar-link fw-bold" asp-controller="GuestPortal" asp-action="BookRoom"><i class="bi bi-calendar-plus me-3"></i> Book a Room</a></li>
-                }
-
-                @if (User.Identity != null && !User.Identity.IsAuthenticated)
-                {
-                    <li><a class="sidebar-link fw-bold" asp-controller="Account" asp-action="Login"><i class="bi bi-box-arrow-in-right me-3"></i> Login</a></li>
-                    <li><a class="sidebar-link" asp-controller="Account" asp-action="Register"><i class="bi bi-person-plus me-3"></i> Register Account</a></li>
-                }
-            </ul>
-
-            @if (User.Identity != null && User.Identity.IsAuthenticated)
-            {
-                <div class="sidebar-footer d-flex justify-content-between align-items-center">
-                    <div class="text-truncate text-white" style="max-width: 140px; font-size: 0.95rem; font-weight: 500;">
-                        <i class="bi bi-person-fill text-muted me-1"></i> @(User.Identity.Name ?? "User")
-                    </div>
-                    <a class="btn btn-sm btn-outline-danger border-0" title="Logout" asp-controller="Account" asp-action="Logout">
-                        <i class="bi bi-power fs-5"></i>
-                    </a>
+    @if (hideSidebar)
+    {
+        <div class="auth-wrapper">
+            <div class="container">
+                <div class="row justify-content-center">
+                    @RenderBody()
                 </div>
-            }
-        </div>
-
-        <div class="content-area">
-            <div class="main-container">
-                @RenderBody()
             </div>
         </div>
+    }
+    else
+    {
+        <div class="layout-wrapper">
+            
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    @if (User.IsInRole("Admin")) 
+                    { 
+                        <a asp-controller="Report" asp-action="Index" class="text-white text-decoration-none">
+                            <span><i class="bi bi-shield-lock-fill me-2"></i>HotelMS (Admin)</span>
+                        </a> 
+                    }
+                    else if (User.IsInRole("Manager")) 
+                    { 
+                        <a asp-controller="Manager" asp-action="Index" class="text-white text-decoration-none">
+                            <span><i class="bi bi-briefcase-fill me-2"></i>HotelMS (Manager)</span>
+                        </a> 
+                    }
+                    else if (User.IsInRole("Housekeeping")) 
+                    { 
+                        <a asp-controller="Housekeeping" asp-action="StaffIndex" class="text-white text-decoration-none">
+                            <span><i class="bi bi-stars me-2"></i>HotelMS (Staff)</span>
+                        </a> 
+                    }
+                    else if (User.IsInRole("Receptionist")) 
+                    { 
+                        <a asp-controller="Reception" asp-action="Index" class="text-white text-decoration-none">
+                            <span><i class="bi bi-telephone-fill me-2"></i>HotelMS (Reception)</span>
+                        </a> 
+                    }
+                    else if (User.IsInRole("Guest")) 
+                    { 
+                        <a asp-controller="GuestPortal" asp-action="Index" class="text-white text-decoration-none">
+                            <span><i class="bi bi-person-circle me-2"></i>HotelMS (Guest)</span>
+                        </a> 
+                    }
+                    else 
+                    { 
+                        <a href="/" class="text-white text-decoration-none">
+                            <span><i class="bi bi-building me-2"></i>HotelMS</span>
+                        </a> 
+                    }
+                </div>
 
+                <ul class="sidebar-menu">
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li><a class="sidebar-link fw-bold" asp-controller="Report" asp-action="Index"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a></li>
+                        <li><a class="sidebar-link fw-bold" asp-controller="Room" asp-action="Index"><i class="bi bi-door-open me-3"></i> Rooms</a></li>
+
+                        <li>
+                            <a href="#adminBookings" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-journal-bookmark me-3"></i> Bookings</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminBookings">
+                                <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Create"><i class="bi bi-calendar-plus me-2"></i> New Booking</a></li>
+                                <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Index"><i class="bi bi-calendar-check me-2"></i> All Bookings</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#adminGuests" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-people me-3"></i> Guests</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminGuests">
+                                <li><a class="sidebar-link" asp-controller="Guest" asp-action="Create"><i class="bi bi-person-plus me-2"></i> Register Guest</a></li>
+                                <li><a class="sidebar-link" asp-controller="Guest" asp-action="Index"><i class="bi bi-person-lines-fill me-2"></i> All Guests</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#adminFinance" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-wallet2 me-3"></i> Financials</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminFinance">
+                                <li><a class="sidebar-link" asp-controller="Billing" asp-action="Index"><i class="bi bi-cash-coin me-2"></i> Billing Dashboard</a></li>
+                                <li><a class="sidebar-link" asp-controller="Billing" asp-action="AllInvoices"><i class="bi bi-receipt me-2"></i> All Invoices</a></li>
+                            </ul>
+                        </li>
+
+                        
+                        <li>
+                            <a href="#adminHR" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-person-vcard me-3"></i> HR & Staff</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminHR">
+                                <li><a class="sidebar-link" asp-controller="StaffDirectory" asp-action="StaffList"><i class="bi bi-people me-2"></i> Staff Directory</a></li>
+                                <li><a class="sidebar-link" asp-controller="StaffDirectory" asp-action="Attendance"><i class="bi bi-calendar2-check me-2"></i> Daily Attendance</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#adminHK" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-bucket-fill me-1"></i><i class="bi bi-stars me-2" style="font-size: 0.7rem; vertical-align: top;"></i> Housekeeping</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminHK">
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="Index"><i class="bi bi-clipboard-check me-2"></i> Pending Tasks</a></li>
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="AllTasks"><i class="bi bi-list-task me-2"></i> All Tasks</a></li>
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="PerformanceReport"><i class="bi bi-graph-up-arrow me-2"></i> Staff Performance</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#adminReports" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-bar-chart me-3"></i> Reports</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminReports">
+                                <li><a class="sidebar-link" asp-controller="Report" asp-action="OccupancyReport"><i class="bi bi-building-check me-2"></i> Occupancy Report</a></li>
+                                <li><a class="sidebar-link" asp-controller="Report" asp-action="RevenueAnalysis"><i class="bi bi-currency-dollar me-2"></i> Revenue Analysis</a></li>
+                            </ul>
+                        </li>
+                    }
+                    else if (User.IsInRole("Manager"))
+                    {
+                        <li><a class="sidebar-link fw-bold" asp-controller="Manager" asp-action="Index"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a></li>
+                        <li><a class="sidebar-link fw-bold" asp-controller="Manager" asp-action="Rooms"><i class="bi bi-door-open me-3"></i> Rooms</a></li>
+
+                        <li>
+                            <a href="#mgrAssignments" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-card-checklist me-3"></i> Staff Assignments</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="mgrAssignments">
+                                <li><a class="sidebar-link" asp-controller="Manager" asp-action="Housekeeping"><i class="bi bi-person-lines-fill me-2"></i> Assign Tasks</a></li>
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="Index"><i class="bi bi-clock-history me-2"></i> View Pending</a></li>
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="PerformanceReport"><i class="bi bi-graph-up me-2"></i> Performance</a></li>
+                            </ul>
+                        </li>
+
+
+                        <li>
+                            <a href="#mgrReports" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-bar-chart me-3"></i> Reports</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="mgrReports">
+                                <li><a class="sidebar-link" asp-controller="Report" asp-action="OccupancyReport"><i class="bi bi-building-check me-2"></i> Occupancy Report</a></li>
+                                <li><a class="sidebar-link" asp-controller="Report" asp-action="RevenueAnalysis"><i class="bi bi-currency-dollar me-2"></i> Revenue Analysis</a></li>
+                            </ul>
+                        </li>
+                    }
+                    else if (User.IsInRole("Receptionist"))
+                    {
+                        <li><a class="sidebar-link fw-bold" asp-controller="Reception" asp-action="Index"><i class="bi bi-front me-3"></i> Front Desk</a></li>
+
+                        <li>
+                            <a href="#recBookings" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-journal-bookmark me-3"></i> Bookings</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="recBookings">
+                                <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Create"><i class="bi bi-calendar-plus me-2"></i> New Booking</a></li>
+                                <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Index"><i class="bi bi-calendar-check me-2"></i> All Bookings</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#recGuests" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-people me-3"></i> Guests</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="recGuests">
+                                <li><a class="sidebar-link" asp-controller="Guest" asp-action="Create"><i class="bi bi-person-plus me-2"></i> Register Guest</a></li>
+                                <li><a class="sidebar-link" asp-controller="Guest" asp-action="Index"><i class="bi bi-person-lines-fill me-2"></i> All Guests</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#recFinance" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-wallet2 me-3"></i> Financials</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="recFinance">
+                                <li><a class="sidebar-link" asp-controller="Billing" asp-action="Index"><i class="bi bi-cash-coin me-2"></i> Billing</a></li>
+                                <li><a class="sidebar-link" asp-controller="Billing" asp-action="AllInvoices"><i class="bi bi-receipt me-2"></i> All Invoices</a></li>
+                            </ul>
+                        </li>
+                    }
+                    else if (User.IsInRole("Housekeeping"))
+                    {
+                        <li>
+                                <li><a class="sidebar-link text-warning fw-bold" asp-controller="Housekeeping" asp-action="StaffIndex"><i class="bi bi-broom me-2"></i> My Daily Tasks</a></li>
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="History"><i class="bi bi-clock-history me-2"></i> Cleaning History</a></li>
+                                <li><a class="sidebar-link text-info" asp-controller="Housekeeping" asp-action="PerformanceReport"><i class="bi bi-award me-2"></i> Performance Report</a></li>
+                        
+                        </li>
+                    }
+                    else if (User.IsInRole("Guest"))
+                    {
+                        <li><a class="sidebar-link fw-bold" asp-controller="GuestPortal" asp-action="Index"><i class="bi bi-person-circle me-3"></i> My Dashboard</a></li>
+                        <li><a class="sidebar-link fw-bold" asp-controller="GuestPortal" asp-action="BookRoom"><i class="bi bi-calendar-plus me-3"></i> Book a Room</a></li>
+                    }
+
+                    @if (User.Identity != null && !User.Identity.IsAuthenticated)
+                    {
+                        <li><a class="sidebar-link fw-bold" asp-controller="Account" asp-action="Login"><i class="bi bi-box-arrow-in-right me-3"></i> Login</a></li>
+                        <li><a class="sidebar-link" asp-controller="Account" asp-action="Register"><i class="bi bi-person-plus me-3"></i> Register Account</a></li>
+                    }
+                </ul>
+
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    // --- DETERMINE THE DISPLAY NAME ---
+                    string displayName = "User";
+    
+                    // 1. If Admin, force it to just say "Admin"
+                    if (User.IsInRole("Admin")) 
+                    { 
+                        displayName = "Admin"; 
+                    }
+                    else 
+                    { 
+                        // 2. For everyone else, grab their real Full Name from their login cookie
+                        var fullNameClaim = User.Claims.FirstOrDefault(c => c.Type == "FullName");
+        
+                        if (fullNameClaim != null && !string.IsNullOrWhiteSpace(fullNameClaim.Value))
+                        {
+                            displayName = fullNameClaim.Value;
+                        }
+                        else
+                        {
+                            // A failsafe just in case the name isn't found
+                            displayName = User.Identity.Name?.Split('@')[0] ?? "User";
+                        }
+                    }
+
+                    <div class="sidebar-footer d-flex justify-content-between align-items-center">
+                        <div class="text-truncate text-white" style="max-width: 140px; font-size: 0.95rem; font-weight: 500;">
+                            <i class="bi bi-person-fill text-muted me-1"></i> @displayName
+                        </div>
+            
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 p-0">
+                            <button type="button" class="btn btn-sm btn-outline-danger border-0" title="Logout" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
+                                <i class="bi bi-power fs-5"></i>
+                            </button>
+                        </form>
+            
+                    </div>
+                }
+            </div>
+
+            <div class="content-area">
+                <div class="main-container">
+                    @RenderBody()
+                </div>
+            </div>
+
+        </div>
+    }
+
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 15px;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary" id="logoutModalLabel">Confirm Logout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-box-arrow-right text-warning mb-3" style="font-size: 3.5rem;"></i>
+                    <h5 class="text-dark">Do you wish to log out?</h5>
+                    <p class="text-muted mb-0">You will be securely logged out and returned to the main portal.</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center gap-2 pb-4">
+                    <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Cancel</button>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 p-0">
+                        <button type="submit" class="btn btn-danger fw-bold px-4 shadow-sm">Confirm</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

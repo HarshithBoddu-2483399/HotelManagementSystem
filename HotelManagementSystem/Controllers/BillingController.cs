@@ -163,8 +163,6 @@ namespace HotelManagementSystem.Controllers
                         if (reservation.Room != null)
                         {
                             reservation.Room.Status = "DIRTY";
-
-                            // ---> FIX 1: Aggressively grab all pending tasks for this room to prevent duplicates
                             var pendingTasks = _context.HousekeepingTasks
                                 .Where(t => t.RoomId == reservation.RoomId && t.TaskStatus == "PENDING")
                                 .ToList();
@@ -173,10 +171,8 @@ namespace HotelManagementSystem.Controllers
 
                             if (pendingTasks.Any())
                             {
-                                // Keep the first one found
                                 taskToKeep = pendingTasks.First();
 
-                                // If there are duplicates, delete them immediately
                                 if (pendingTasks.Count > 1)
                                 {
                                     var duplicateTasks = pendingTasks.Skip(1).ToList();
@@ -185,7 +181,6 @@ namespace HotelManagementSystem.Controllers
                             }
                             else
                             {
-                                // Create a new one if absolutely none exist
                                 taskToKeep = new HousekeepingTask
                                 {
                                     RoomId = reservation.RoomId,
@@ -194,7 +189,7 @@ namespace HotelManagementSystem.Controllers
                                 _context.HousekeepingTasks.Add(taskToKeep);
                             }
 
-                            // ---> FIX 2: Use the SCHEDULED CheckOutDate from the booking, NOT DateTime.Now
+                            
                             taskToKeep.CheckoutTime = reservation.CheckOutDate;
                         }
                         _context.SaveChanges();

@@ -2,6 +2,7 @@
 using HotelManagementSystem.Services;
 using HotelManagementSystem.ViewModels;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -71,10 +72,18 @@ namespace HotelManagementSystem.Controllers
             return View();
         }
 
+        [HttpPost]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync("CookieAuth");
-            return RedirectToAction("Login");
+            return RedirectToAction("LoggedOut");
+        }
+
+        [HttpGet]
+        [AllowAnonymous] // Anyone can see this page, even if logged out
+        public IActionResult LoggedOut()
+        {
+            return View();
         }
 
         [AllowAnonymous]
