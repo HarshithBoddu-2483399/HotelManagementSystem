@@ -2,162 +2,134 @@
 
 @{
     ViewData["Title"] = "Guest Registration";
+    ViewData["HideSidebar"] = true;
 }
 
-<div class="container mt-5 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-body p-5">
-                    
-                    <div class="text-center mb-4">
-                        <h2 class="fw-bold text-primary">Create an Account</h2>
-                        <p class="text-muted">Join us to manage your bookings and receipts.</p>
+<div class="col-md-8 col-lg-6 my-4">
+    <div class="card glass-card">
+        <div class="card-body p-4">
+            
+            <div class="text-end mb-2" style="font-size: 0.85rem;">
+                <span class="text-muted">Already have an account?</span>
+                <a href="/Account/Login" class="text-primary fw-bold text-decoration-none">Log in here</a>
+            </div>
+
+            <div class="text-center mb-3">
+                <h3 class="fw-bold text-primary">Create an Account</h3>
+                <p class="text-muted small">Join us to manage your bookings and receipts.</p>
+            </div>
+
+            <form asp-controller="Account" asp-action="Register" method="post" id="registerForm">
+                
+                <div class="mb-2">
+                    <label class="form-label fw-bold small mb-1">Full Name</label>
+                    <input type="text" name="Name" class="form-control" required />
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label fw-bold small mb-1">Email Address</label>
+                    <input type="email" id="emailInput" name="Email" class="form-control" placeholder="name@example.com" required />
+                    <small id="emailError" class="text-danger fw-bold mt-1" style="display:none;">
+                        Already user with this mail id exists.
+                    </small>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label fw-bold small mb-1">Phone Number</label>
+                    <input type="text" id="phoneInput" name="Phone" class="form-control" pattern="\d{10}" title="Exactly 10 digits required" placeholder="10-digit number" maxlength="10" required />
+                    <small id="phoneError" class="text-danger fw-bold mt-1" style="display:none;">
+                        Phone no you are trying has already acc with us trying resetting password.
+                    </small>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label fw-bold text-success small mb-1">4-Digit Recovery PIN</label>
+                    <input type="text" name="RecoveryPin" class="form-control border-success" pattern="\d{4}" maxlength="4" placeholder="e.g. 1234" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required />
+                    <small class="text-muted" style="font-size: 0.75rem;">You will need this PIN to reset your password if you forget it!</small>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-6 mb-2 mb-sm-0">
+                        <label class="form-label fw-bold small mb-1">Password</label>
+                        <input type="password" id="passInput" name="Password" class="form-control" minlength="6" required />
                     </div>
-
-                    <form asp-controller="Account" asp-action="Register" method="post" id="registerForm">
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Full Name</label>
-                            <input type="text" name="Name" class="form-control form-control-lg" required />
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Email Address</label>
-                            <input type="email" id="emailInput" name="Email" class="form-control form-control-lg" placeholder="name@example.com" required />
-                            <small id="emailError" class="text-danger fw-bold mt-1" style="display:none;">
-                                Already user with this mail id exists.
-                            </small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Phone Number</label>
-                            <input type="text" id="phoneInput" name="Phone" class="form-control form-control-lg" pattern="\d{10}" title="Exactly 10 digits required" placeholder="10-digit number" maxlength="10" required />
-                            <small id="phoneError" class="text-danger fw-bold mt-1" style="display:none;">
-                                Phone no you are trying has already acc with us trying resetting password.
-                            </small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold text-success">4-Digit Account Recovery PIN</label>
-                            <input type="text" name="RecoveryPin" class="form-control form-control-lg border-success" pattern="\d{4}" maxlength="4" placeholder="e.g. 1234" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required />
-                            <small class="text-muted">You will need this PIN to reset your password if you forget it!</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Password</label>
-                            <input type="password" id="passInput" name="Password" class="form-control form-control-lg" minlength="6" required />
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Re-enter Password</label>
-                            <input type="password" id="confirmPassInput" name="ConfirmPassword" class="form-control form-control-lg" minlength="6" required />
-                            <small id="passError" class="text-danger fw-bold mt-1" style="display:none;">
-                                Passwords do not match.
-                            </small>
-                        </div>
-
-                        <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm">
-                            Sign Up
-                        </button>
-                        
-                        <div class="text-center mt-4">
-                            <p class="text-muted">Already have an account? <a href="/Account/Login" class="text-decoration-none fw-bold">Log in here</a></p>
-                        </div>
-
-                    </form>
-
-                    <div class="text-center mt-3">
-                        <p class="text-muted mb-1">Booked at the front desk? <a href="/Account/ClaimAccount" class="fw-bold">Claim your account</a></p>
-                        <p class="text-muted">Don't have an account? <a href="/Account/Register" class="fw-bold">Sign up here</a></p>
+                    <div class="col-sm-6">
+                        <label class="form-label fw-bold small mb-1">Re-enter Password</label>
+                        <input type="password" id="confirmPassInput" name="ConfirmPassword" class="form-control" minlength="6" required />
+                        <small id="passError" class="text-danger fw-bold mt-1" style="display:none;">
+                            Passwords do not match.
+                        </small>
                     </div>
                 </div>
+
+                <button type="submit" id="submitBtn" class="btn btn-primary w-100 fw-bold shadow-sm">
+                    Sign Up
+                </button>
+                
+            </form>
+
+            <div class="text-center mt-3 pt-2 border-top">
+                <p class="text-muted mb-1 small">Booked at the front desk? <a href="/Account/ClaimAccount" class="fw-bold text-decoration-none">Claim your account</a></p>
+                <p class="text-muted mb-0 small"><a href="/Account/ForgotPassword" class="fw-bold text-decoration-none text-danger">Forgot Password?</a></p>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const emailInput = document.getElementById('emailInput');
-        const phoneInput = document.getElementById('phoneInput');
-        const emailError = document.getElementById('emailError');
-        const phoneError = document.getElementById('phoneError');
-        
-        const passInput = document.getElementById('passInput');
-        const confirmPassInput = document.getElementById('confirmPassInput');
-        const passError = document.getElementById('passError');
-        const submitBtn = document.getElementById('submitBtn');
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('emailInput');
+            const phoneInput = document.getElementById('phoneInput');
+            const emailError = document.getElementById('emailError');
+            const phoneError = document.getElementById('phoneError');
+            const passInput = document.getElementById('passInput');
+            const confirmPassInput = document.getElementById('confirmPassInput');
+            const passError = document.getElementById('passError');
+            const submitBtn = document.getElementById('submitBtn');
 
-        let isEmailValid = true;
-        let isPhoneValid = true;
+            let isEmailValid = true; let isPhoneValid = true;
 
-        // Form logic to disable button if things are invalid
-        function updateSubmitButton() {
-            if (!isEmailValid || !isPhoneValid || (passInput.value !== confirmPassInput.value && confirmPassInput.value !== "")) {
-                submitBtn.disabled = true;
-            } else {
-                submitBtn.disabled = false;
+            function updateSubmitButton() {
+                submitBtn.disabled = (!isEmailValid || !isPhoneValid || (passInput.value !== confirmPassInput.value && confirmPassInput.value !== ""));
             }
-        }
 
-        // Live Email Check
-        emailInput.addEventListener('blur', function() {
-            if (this.value) {
-                fetch(`/Account/CheckEmail?email=${encodeURIComponent(this.value)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.exists) {
-                            emailError.style.display = 'block';
-                            emailInput.classList.add('is-invalid');
-                            isEmailValid = false;
-                        } else {
-                            emailError.style.display = 'none';
-                            emailInput.classList.remove('is-invalid');
-                            isEmailValid = true;
-                        }
-                        updateSubmitButton();
-                    });
-            }
+            emailInput.addEventListener('blur', function() {
+                if (this.value) {
+                    fetch(`/Account/CheckEmail?email=${encodeURIComponent(this.value)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            emailError.style.display = data.exists ? 'block' : 'none';
+                            emailInput.classList.toggle('is-invalid', data.exists);
+                            isEmailValid = !data.exists;
+                            updateSubmitButton();
+                        });
+                }
+            });
+
+            phoneInput.addEventListener('input', function() { this.value = this.value.replace(/[^0-9]/g, ''); });
+            phoneInput.addEventListener('blur', function() {
+                if (this.value.length === 10) {
+                    fetch(`/Account/CheckPhone?phone=${encodeURIComponent(this.value)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            phoneError.style.display = data.exists ? 'block' : 'none';
+                            phoneInput.classList.toggle('is-invalid', data.exists);
+                            isPhoneValid = !data.exists;
+                            updateSubmitButton();
+                        });
+                }
+            });
+
+            const checkPasswords = () => {
+                const mismatch = confirmPassInput.value && passInput.value !== confirmPassInput.value;
+                passError.style.display = mismatch ? 'block' : 'none';
+                confirmPassInput.classList.toggle('is-invalid', mismatch);
+                updateSubmitButton();
+            };
+
+            passInput.addEventListener('input', checkPasswords);
+            confirmPassInput.addEventListener('input', checkPasswords);
         });
-
-        // Live Phone Check (Forces numbers only)
-        phoneInput.addEventListener('input', function() {
-            this.value = this.value.replace(/[^0-9]/g, ''); // Instantly removes letters
-        });
-
-        phoneInput.addEventListener('blur', function() {
-            if (this.value.length === 10) {
-                fetch(`/Account/CheckPhone?phone=${encodeURIComponent(this.value)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.exists) {
-                            phoneError.style.display = 'block';
-                            phoneInput.classList.add('is-invalid');
-                            isPhoneValid = false;
-                        } else {
-                            phoneError.style.display = 'none';
-                            phoneInput.classList.remove('is-invalid');
-                            isPhoneValid = true;
-                        }
-                        updateSubmitButton();
-                    });
-            }
-        });
-
-        // Password Match Check
-        const checkPasswords = () => {
-            if (confirmPassInput.value && passInput.value !== confirmPassInput.value) {
-                passError.style.display = 'block';
-                confirmPassInput.classList.add('is-invalid');
-            } else {
-                passError.style.display = 'none';
-                confirmPassInput.classList.remove('is-invalid');
-            }
-            updateSubmitButton();
-        };
-
-        passInput.addEventListener('input', checkPasswords);
-        confirmPassInput.addEventListener('input', checkPasswords);
-    });
-</script>
+    </script>
+}

@@ -57,7 +57,6 @@ namespace HotelManagementSystem.Controllers
                     InvoiceId = inv?.InvoiceId
                 };
 
-                // FIX 2: Added CHECKED_OUT and INVOICED to Past Bookings
                 if (res.ReservationStatus == "COMPLETED" ||
                     res.ReservationStatus == "CANCELLED" ||
                     res.ReservationStatus == "CHECKED_OUT" ||
@@ -140,7 +139,7 @@ namespace HotelManagementSystem.Controllers
             return RedirectToAction("Index");
         }
 
-        // FIX 2: CANCEL BOOKING LOGIC
+        // CANCEL BOOKING
         [HttpPost]
         public IActionResult CancelBooking(int reservationId)
         {
@@ -150,7 +149,6 @@ namespace HotelManagementSystem.Controllers
 
             var res = _context.Reservations.Find(reservationId);
 
-            // Security check: Ensure they own this booking and it hasn't started yet
             if (res != null && res.GuestId == loggedInGuestId && res.ReservationStatus == "BOOKED")
             {
                 res.ReservationStatus = "CANCELLED";
@@ -177,7 +175,6 @@ namespace HotelManagementSystem.Controllers
 
             var res = _context.Reservations.Find(reservationId);
 
-            // Security check: Make sure this reservation actually belongs to the logged-in guest
             if (res == null || res.GuestId != loggedInGuestId)
                 return Content("Access Denied: You do not have permission to view this receipt.");
 
@@ -185,7 +182,6 @@ namespace HotelManagementSystem.Controllers
             if (invoice == null)
                 return Content("Receipt has not been generated yet.");
 
-            // Pass the related data to the view
             ViewBag.Reservation = res;
             ViewBag.Room = _context.Rooms.Find(res.RoomId);
             ViewBag.Guest = _context.Guests.Find(res.GuestId);

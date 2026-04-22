@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using HotelManagementSystem.Services;
 using HotelManagementSystem.Data;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using HotelManagementSystem.Models;
+using System;
 
 namespace HotelManagementSystem.Controllers
 {
@@ -11,7 +14,7 @@ namespace HotelManagementSystem.Controllers
     {
         private readonly IBillingService _billingService;
         private readonly IReservationService _resService;
-        private readonly ApplicationDbContext _context; 
+        private readonly ApplicationDbContext _context;
 
         public BillingController(IBillingService billingService, IReservationService resService, ApplicationDbContext context)
         {
@@ -40,14 +43,13 @@ namespace HotelManagementSystem.Controllers
 
             try
             {
-                var reservation = _context.Reservations.Find(reservationId);
+                var reservation = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == reservationId);
                 if (reservation != null)
                 {
                     reservation.ReservationStatus = "CHECKED-IN";
-                    var room = _context.Rooms.Find(reservation.RoomId);
-                    if (room != null && room.Status == "AVAILABLE")
+                    if (reservation.Room != null && reservation.Room.Status == "AVAILABLE")
                     {
-                        room.Status = "OCCUPIED";
+                        reservation.Room.Status = "OCCUPIED";
                     }
                     _context.SaveChanges();
                 }
@@ -64,14 +66,46 @@ namespace HotelManagementSystem.Controllers
 
             try
             {
-                var reservation = _context.Reservations.Find(reservationId);
+                var reservation = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == reservationId);
                 if (reservation != null)
                 {
                     reservation.ReservationStatus = "CHECKED-OUT";
-                    var room = _context.Rooms.Find(reservation.RoomId);
-                    if (room != null)
+                    if (reservation.Room != null)
                     {
-                        room.Status = "DIRTY"; 
+                        reservation.Room.Status = "DIRTY";
+
+                        // ---> FIX 1: Aggressively grab all pending tasks for this room to prevent duplicates
+                        var pendingTasks = _context.HousekeepingTasks
+                            .Where(t => t.RoomId == reservation.RoomId && t.TaskStatus == "PENDING")
+                            .ToList();
+
+                        HousekeepingTask taskToKeep;
+
+                        if (pendingTasks.Any())
+                        {
+                            // Keep the first one found
+                            taskToKeep = pendingTasks.First();
+
+                            // If there are duplicates, delete them immediately
+                            if (pendingTasks.Count > 1)
+                            {
+                                var duplicateTasks = pendingTasks.Skip(1).ToList();
+                                _context.HousekeepingTasks.RemoveRange(duplicateTasks);
+                            }
+                        }
+                        else
+                        {
+                            // Create a new one if absolutely none exist
+                            taskToKeep = new HousekeepingTask
+                            {
+                                RoomId = reservation.RoomId,
+                                TaskStatus = "PENDING"
+                            };
+                            _context.HousekeepingTasks.Add(taskToKeep);
+                        }
+
+                        // ---> FIX 2: Use the SCHEDULED CheckOutDate from the booking, NOT DateTime.Now
+                        taskToKeep.CheckoutTime = reservation.CheckOutDate;
                     }
                     _context.SaveChanges();
                 }
@@ -97,13 +131,16 @@ namespace HotelManagementSystem.Controllers
                 return NotFound("Invoice not found.");
             }
 
-            var res = _context.Reservations.Find(reservationId);
+            var res = _context.Reservations
+                .Include(r => r.Room)
+                .Include(r => r.Guest)
+                .FirstOrDefault(r => r.ReservationId == reservationId);
 
             if (res != null)
             {
                 ViewBag.Reservation = res;
-                ViewBag.Room = _context.Rooms.Find(res.RoomId);
-                ViewBag.Guest = _context.Guests.Find(res.GuestId);
+                ViewBag.Room = res.Room;
+                ViewBag.Guest = res.Guest;
             }
 
             return View("Receipt", invoice);
@@ -116,24 +153,50 @@ namespace HotelManagementSystem.Controllers
 
             try
             {
-                
                 var invoice = _context.Invoices.Find(invoiceId);
                 if (invoice != null)
                 {
-                    var reservation = _context.Reservations.Find(invoice.ReservationId);
+                    var reservation = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == invoice.ReservationId);
                     if (reservation != null)
                     {
                         reservation.ReservationStatus = "CHECKED-OUT";
-                        var room = _context.Rooms.Find(reservation.RoomId);
-                        if (room != null)
+                        if (reservation.Room != null)
                         {
-                            room.Status = "DIRTY"; 
+                            reservation.Room.Status = "DIRTY";
+                            var pendingTasks = _context.HousekeepingTasks
+                                .Where(t => t.RoomId == reservation.RoomId && t.TaskStatus == "PENDING")
+                                .ToList();
+
+                            HousekeepingTask taskToKeep;
+
+                            if (pendingTasks.Any())
+                            {
+                                taskToKeep = pendingTasks.First();
+
+                                if (pendingTasks.Count > 1)
+                                {
+                                    var duplicateTasks = pendingTasks.Skip(1).ToList();
+                                    _context.HousekeepingTasks.RemoveRange(duplicateTasks);
+                                }
+                            }
+                            else
+                            {
+                                taskToKeep = new HousekeepingTask
+                                {
+                                    RoomId = reservation.RoomId,
+                                    TaskStatus = "PENDING"
+                                };
+                                _context.HousekeepingTasks.Add(taskToKeep);
+                            }
+
+                            
+                            taskToKeep.CheckoutTime = reservation.CheckOutDate;
                         }
                         _context.SaveChanges();
                     }
                 }
             }
-            catch { /* Failsafe to ensure the page still loads even if DB update fails */ }
+            catch { /* Failsafe */ }
 
             return RedirectToAction("Index");
         }

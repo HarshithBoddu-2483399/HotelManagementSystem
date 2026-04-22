@@ -2,6 +2,7 @@
 using System.Linq;
 using HotelManagementSystem.Data;
 using HotelManagementSystem.Models;
+using Microsoft.EntityFrameworkCore; // Required for .Include()
 
 namespace HotelManagementSystem.Services
 {
@@ -10,7 +11,11 @@ namespace HotelManagementSystem.Services
         private readonly ApplicationDbContext _context;
         public ReservationService(ApplicationDbContext context) { _context = context; }
 
-        public IEnumerable<Reservation> GetAllReservations() => _context.Reservations.ToList();
+        public IEnumerable<Reservation> GetAllReservations() =>
+            _context.Reservations
+                .Include(r => r.Guest)  // Eager Load Guests
+                .Include(r => r.Room)   // Eager Load Rooms
+                .ToList();
 
         public bool CreateReservation(Reservation res, Guest guest)
         {
@@ -18,7 +23,7 @@ namespace HotelManagementSystem.Services
                 r.RoomId == res.RoomId &&
                 r.ReservationStatus != "CANCELLED" &&
                 r.ReservationStatus != "COMPLETED" &&
-                res.CheckInDate < r.CheckOutDate.AddHours(1) && 
+                res.CheckInDate < r.CheckOutDate.AddHours(1) &&
                 res.CheckOutDate > r.CheckInDate);
 
             if (isOverlap) return false;
@@ -47,16 +52,15 @@ namespace HotelManagementSystem.Services
 
         public void CancelReservation(int reservationId)
         {
-            var res = _context.Reservations.Find(reservationId);
+            var res = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == reservationId);
 
             if (res != null && res.ReservationStatus == "BOOKED")
             {
                 res.ReservationStatus = "CANCELLED";
 
-                var room = _context.Rooms.Find(res.RoomId);
-                if (room != null && room.Status == "BOOKED")
+                if (res.Room != null && res.Room.Status == "BOOKED")
                 {
-                    room.Status = "AVAILABLE";
+                    res.Room.Status = "AVAILABLE";
                 }
 
                 _context.SaveChanges();

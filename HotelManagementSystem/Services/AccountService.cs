@@ -16,37 +16,41 @@ namespace HotelManagementSystem.Services
 
         public async Task<User> Authenticate(string username, string password)
         {
-            // 1. Check Hardcoded Staff (For testing)
+            // 1. Check Hardcoded Default Admin (Keep this so you don't get locked out!)
             if (username == "admin@hotel.com" && password == "Admin@123")
             {
                 return new User { Username = "admin@hotel.com", Role = "Admin", UserId = 0 };
             }
 
-            if (username == "manager@hotel.com" && password == "Manager@123")
-            {
-                return new User { Username = "manager@hotel.com", Role = "Manager", UserId = 0 };
-            }
+            // 2. STRICT STAFF CHECK: Search by Username (Email), then verify BCrypt hash
+            var staffUser = _context.Users.FirstOrDefault(u => u.Username == username);
 
-            // 2. Check the Staff / Users table
-            var staffUser = _context.Users.FirstOrDefault(u => u.Username == username && u.Password == password);
-            if (staffUser != null)
+            if (staffUser != null && !string.IsNullOrEmpty(staffUser.Password))
             {
-                return staffUser;
-            }
-
-            // GUESTS CHECKS 
-            var guestUser = _context.Guests.FirstOrDefault(g => g.Email == username && g.Password == password);
-            if (guestUser != null)
-            {
-                return new User
+                // If it's the old hardcoded manager, allow it, otherwise check the hash
+                if (staffUser.Password == password || BCrypt.Net.BCrypt.Verify(password, staffUser.Password))
                 {
-                    UserId = guestUser.GuestId,
-                    Username = guestUser.Email,
-                    Role = "Guest"
-                };
+                    return staffUser;
+                }
             }
 
-            return null;
+            // 3. STRICT GUEST CHECK: Search by Email, then verify BCrypt hash
+            var guestUser = _context.Guests.FirstOrDefault(g => g.Email == username);
+
+            if (guestUser != null && !string.IsNullOrEmpty(guestUser.Password))
+            {
+                if (BCrypt.Net.BCrypt.Verify(password, guestUser.Password))
+                {
+                    return new User
+                    {
+                        UserId = guestUser.GuestId,
+                        Username = guestUser.Email,
+                        Role = "Guest"
+                    };
+                }
+            }
+
+            return null; // Invalid credentials
         }
     }
 }

@@ -54,17 +54,25 @@ namespace HotelManagementSystem.Services
 
         public IEnumerable<BookingRecord> GetActiveBookings()
         {
+            // 1. EAGER LOAD Reservations with their Guests and Rooms
             var reservations = _context.Reservations
+                .Include(r => r.Guest)
+                .Include(r => r.Room)
                 .Where(r => r.ReservationStatus != "COMPLETED" && r.ReservationStatus != "CANCELLED")
+                .ToList();
+
+            // 2. Fetch relevant Invoices in a single query
+            var reservationIds = reservations.Select(r => r.ReservationId).ToList();
+            var invoices = _context.Invoices
+                .Where(i => reservationIds.Contains(i.ReservationId))
                 .ToList();
 
             var result = new List<BookingRecord>();
 
             foreach (var res in reservations)
             {
-                var guest = _context.Guests.Find(res.GuestId);
-                var room = _context.Rooms.Find(res.RoomId);
-                var inv = _context.Invoices.FirstOrDefault(i => i.ReservationId == res.ReservationId);
+                // Find invoice in memory (no DB trip inside this loop!)
+                var inv = invoices.FirstOrDefault(i => i.ReservationId == res.ReservationId);
 
                 if (inv != null && inv.PaymentStatus == "PAID") continue;
 
@@ -72,8 +80,8 @@ namespace HotelManagementSystem.Services
                 {
                     ReservationId = res.ReservationId,
                     GuestId = res.GuestId,
-                    GuestName = guest?.Name ?? "Unknown Guest",
-                    RoomNumber = room?.RoomNumber ?? "N/A",
+                    GuestName = res.Guest?.Name ?? "Unknown Guest",
+                    RoomNumber = res.Room?.RoomNumber ?? "N/A",
                     CheckIn = res.CheckInDate,
                     CheckOut = res.CheckOutDate,
                     Status = res.ReservationStatus,
@@ -87,32 +95,31 @@ namespace HotelManagementSystem.Services
 
         public void CheckInGuest(int reservationId)
         {
-            var res = _context.Reservations.Find(reservationId);
+            var res = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == reservationId);
             if (res != null)
             {
                 res.ReservationStatus = "CHECKED_IN";
-                var room = _context.Rooms.Find(res.RoomId);
-                if (room != null) room.Status = "OCCUPIED";
+                if (res.Room != null) res.Room.Status = "OCCUPIED";
                 _context.SaveChanges();
             }
         }
 
         public void CheckOutGuest(int reservationId)
         {
-            var res = _context.Reservations.Find(reservationId);
+            var res = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == reservationId);
             if (res != null)
             {
                 res.ReservationStatus = "CHECKED_OUT";
-                var room = _context.Rooms.Find(res.RoomId);
-                if (room != null) room.Status = "DIRTY";
+                if (res.Room != null) res.Room.Status = "DIRTY";
                 _context.SaveChanges();
             }
         }
 
         public Invoice GenerateInvoice(int resId)
         {
-            var res = _context.Reservations.Find(resId);
-            var room = _context.Rooms.Find(res.RoomId);
+            // Eager Load Room
+            var res = _context.Reservations.Include(r => r.Room).FirstOrDefault(r => r.ReservationId == resId);
+            if (res == null) return null;
 
             var existingInv = _context.Invoices.FirstOrDefault(i => i.ReservationId == resId);
             if (existingInv != null) return existingInv;
@@ -122,7 +129,7 @@ namespace HotelManagementSystem.Services
 
             if (diffHours <= 24)
             {
-                daysToCharge = 1.0m; 
+                daysToCharge = 1.0m;
             }
             else
             {
@@ -137,11 +144,11 @@ namespace HotelManagementSystem.Services
                 }
                 else if (extraHours > 6)
                 {
-                    daysToCharge += 1.0m; 
+                    daysToCharge += 1.0m;
                 }
             }
 
-            var totalAmt = daysToCharge * (room?.RatePerNight ?? 0m);
+            var totalAmt = daysToCharge * (res.Room?.RatePerNight ?? 0m);
 
             var inv = new Invoice
             {

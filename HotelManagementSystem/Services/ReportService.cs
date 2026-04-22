@@ -34,7 +34,7 @@ namespace HotelManagementSystem.Services
                 r.ReservationStatus != "CANCELLED" &&
                 r.CheckInDate <= date &&
                 r.CheckOutDate >= date &&
-                (r.ReservationStatus == "CHECKED_IN" || r.ReservationStatus == "CHECKED_OUT" || 
+                (r.ReservationStatus == "CHECKED_IN" || r.ReservationStatus == "CHECKED_OUT" ||
                  r.ReservationStatus == "INVOICED" || r.ReservationStatus == "COMPLETED")
             );
 
@@ -115,6 +115,20 @@ namespace HotelManagementSystem.Services
                 EndDate = end,
                 DateRange = dateRangeLabel
             };
+        }
+
+        public decimal GetRevenueForRange(DateTime start, DateTime end)
+        {
+            var endOfDay = end.Date.AddDays(1).AddTicks(-1);
+
+            return _context.Invoices
+                .ToList()
+                .Where(i =>
+                    // 1. Updated 'Status' to 'PaymentStatus'
+                    (i.PaymentStatus == "Paid" || i.PaymentStatus == "PAID") &&
+                    // 2. Updated to 'InvoiceDate' (Verify this name in your Invoice.cs model)
+                    i.InvoiceDate >= start.Date && i.InvoiceDate <= endOfDay)
+                .Sum(i => (decimal?)i.TotalAmount) ?? 0;
         }
     }
 }

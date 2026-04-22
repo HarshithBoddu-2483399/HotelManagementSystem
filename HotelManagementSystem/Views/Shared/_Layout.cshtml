@@ -7,197 +7,474 @@
     <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/rooms.css" rel="stylesheet" />
     <link href="/css/site-overrides.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f8; }
-        .container { padding: 28px; max-width: 1200px; margin: 0 auto; }
-        .navbar-custom { background-color: #2c3e50; } 
-        .user-name { color: #ecf0f1; font-size: 0.9rem; margin-right: 15px; }
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f8; overflow: hidden; }
+        
+        .layout-wrapper { display: flex; height: 100vh; width: 100vw; }
+
+        .sidebar {
+            width: 280px;
+            background-color: #2c3e50; 
+            display: flex;
+            flex-direction: column;
+            color: white;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 20px 15px;
+            background-color: rgba(0,0,0,0.15);
+            font-size: 1.25rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .sidebar-menu {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px 10px;
+            list-style: none;
+            margin: 0;
+        }
+
+        .sidebar-menu::-webkit-scrollbar { width: 5px; }
+        .sidebar-menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 5px; }
+
+        .sidebar-link {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar-dropdown-toggle {
+            justify-content: space-between;
+            background-color: rgba(0,0,0,0.05);
+            font-weight: bold;
+        }
+        
+        .chevron-icon {
+            transition: transform 0.3s ease;
+            font-size: 0.8rem;
+        }
+        .sidebar-dropdown-toggle[aria-expanded="true"] .chevron-icon {
+            transform: rotate(180deg);
+        }
+
+        .collapse .sidebar-link {
+            padding-left: 40px;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-footer {
+            padding: 15px;
+            background-color: rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .content-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            background-color: #f4f6f8;
+        }
+
+        /* --- ACTIVE STATE HIGHLIGHTS --- */
+        .active-item {
+            background-color: rgba(255, 255, 255, 0.2) !important;
+            color: #ffffff !important;
+            font-weight: bold;
+            border-left: 4px solid #3498db;
+            padding-left: 11px !important; 
+        }
+        
+        .active-parent {
+            color: #ffffff !important;
+            background-color: rgba(0,0,0,0.15); 
+        }
+        
+        .main-container { padding: 28px; max-width: 1200px; margin: 0 auto; }
+
+        /* --- NEW AUTHENTICATION PAGE STYLES --- */
+        .auth-wrapper {
+            background-image: url('/images/hotel-bg.jpg'); /* Adjust if your image name is different */
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: none;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm">
-        <div class="container-fluid">
-            @if (User.IsInRole("Admin"))
-            {
-                <a class="navbar-brand" asp-controller="Report" asp-action="Index">HotelMS (Admin)</a>
-            }
-            else if (User.IsInRole("Manager"))
-            {
-                <a class="navbar-brand" asp-controller="Manager" asp-action="Index">HotelMS (Manager)</a>
-            }
-            else if (User.IsInRole("Housekeeping"))
-            {
-                <a class="navbar-brand" asp-controller="Manager" asp-action="Index">HotelMS (Staff)</a>
-            }
-            else
-            {
-                <a class="navbar-brand" href="/">HotelMS</a>
-            }
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+    @{
+        // Check if the current page requested to hide the sidebar
+        bool hideSidebar = ViewData["HideSidebar"] as bool? ?? false;
+    }
 
-            <div class="collapse navbar-collapse" id="mainNav">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    
-                    @* --- 1. ADMIN ONLY MENU --- *@
-                    @if (User.IsInRole("Admin"))
-                    {
-                        <li class="nav-item"><a class="nav-link" asp-controller="Report" asp-action="Index">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Room" asp-action="Index">Rooms</a></li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="bookingsMenu" data-bs-toggle="dropdown">Bookings</a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                <li><a class="dropdown-item" asp-controller="Reservation" asp-action="Create">New Booking</a></li>
-                                <li><a class="dropdown-item" asp-controller="Reservation" asp-action="Index">All Bookings</a></li>
-                                <li><hr class="dropdown-divider" /></li>
-                                <li><a class="dropdown-item" asp-controller="Guest" asp-action="Create">Register Guest</a></li>
-                                <li><a class="dropdown-item" asp-controller="Guest" asp-action="Index">All Guests</a></li>
-                            </ul>
-                        </li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="financeMenu" data-bs-toggle="dropdown">Financials</a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                <li><a class="dropdown-item" asp-controller="Billing" asp-action="Index">Billing</a></li>
-                                <li><a class="dropdown-item" asp-controller="Billing" asp-action="AllInvoices">All Invoices</a></li>
-                            </ul>
-                        </li>
-
-                        @* Admin Housekeeping section *@
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="adminHkDropdown" data-bs-toggle="dropdown">Housekeeping</a>
-                            <ul class="dropdown-menu shadow-sm">
-                                <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="Index">Pending Tasks</a></li>
-                                <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="AllTasks">All Tasks</a></li>
-                                <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="PerformanceReport">Staff Performance</a></li>
-                            </ul>
-                        </li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="adminReports" data-bs-toggle="dropdown">Reports</a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                <li><a class="dropdown-item" asp-controller="Report" asp-action="OccupancyReport">Occupancy Report</a></li>
-                                <li><a class="dropdown-item" asp-controller="Report" asp-action="RevenueAnalysis">Revenue Analysis</a></li>
-                            </ul>
-                        </li>
-                    }
-
-                    @* --- 2. MANAGER ONLY MENU --- *@
-                    @if (User.IsInRole("Manager"))
-                    {
-                        <li class="nav-item"><a class="nav-link" asp-controller="Manager" asp-action="Index">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Manager" asp-action="Rooms">Rooms</a></li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="assignmentsDropdown" data-bs-toggle="dropdown">Assignments</a>
-                            <ul class="dropdown-menu shadow-sm border-0">
-                                <li><a class="dropdown-item" asp-controller="Manager" asp-action="Housekeeping">Assign</a></li>
-                                <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="Index">View Pending</a></li>
-                                <li><a class="dropdown-item" asp-controller="Housekeeping" asp-action="PerformanceReport">Staff Performance</a></li>
-                            </ul>
-                        </li>
-    
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="staffDropdown" data-bs-toggle="dropdown">Staff Management</a>
-                            <ul class="dropdown-menu shadow-sm border-0">
-                                <li><a class="dropdown-item" asp-controller="Manager" asp-action="StaffList">Staff Directory</a></li>
-                                <li><a class="dropdown-item" asp-controller="Manager" asp-action="Attendance">Daily Attendance</a></li>
-                            </ul>
-                        </li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="managerReports" data-bs-toggle="dropdown">Reports</a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                <li><a class="dropdown-item" asp-controller="Report" asp-action="OccupancyReport">Occupancy Report</a></li>
-                                <li><a class="dropdown-item" asp-controller="Report" asp-action="RevenueAnalysis">Revenue Analysis</a></li>
-                            </ul>
-                        </li>
-                    }
-
-                    @* --- 3. HOUSEKEEPING STAFF MENU --- *@
-                    @if (User.IsInRole("Housekeeping"))
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold text-warning" asp-controller="Housekeeping" asp-action="StaffIndex">My Daily Tasks</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Housekeeping" asp-action="History">My Cleaning History</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-info fw-bold" asp-controller="Housekeeping" asp-action="PerformanceReport">Performance Report</a>
-                        </li>
-                    }
-
-                    @* --- RECEPTIONIST ONLY MENU --- *@
-                    @if (User.IsInRole("Receptionist"))
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Reception" asp-action="Index">Front Desk</a>
-                        </li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="bookingsMenu" data-bs-toggle="dropdown">Bookings</a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                <li><a class="dropdown-item" asp-controller="Reservation" asp-action="Create">New Booking</a></li>
-                                <li><a class="dropdown-item" asp-controller="Reservation" asp-action="Index">All Bookings</a></li>
-                            </ul>
-                        </li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="bookingsMenu" data-bs-toggle="dropdown">Manage Guests</a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                <li><a class="dropdown-item" asp-controller="Guest" asp-action="Create">Register Guest</a></li>
-                                <li><a class="dropdown-item" asp-controller="Guest" asp-action="Index">All Guests</a></li>
-                            </ul>
-                        </li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="financeMenu" data-bs-toggle="dropdown">Financials</a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                <li><a class="dropdown-item" asp-controller="Billing" asp-action="Index">Billing</a></li>
-                                <li><a class="dropdown-item" asp-controller="Billing" asp-action="AllInvoices">All Invoices</a></li>
-                            </ul>
-                        </li>
-                    }
-
-                    @* --- GUEST PORTAL ONLY MENU --- *@
-                    <ul class="navbar-nav flex-grow-1">
-                    @if (User.IsInRole("Guest"))
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold" asp-controller="GuestPortal" asp-action="Index">My Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link fw-bold" asp-controller="GuestPortal" asp-action="BookRoom">Book a Room</a>
-                        </li>
-                    }
-                    </ul>
-
-                    @* --- AUTHENTICATION --- *@
-                    @if (User.Identity.IsAuthenticated)
-                    {
-                        <li class="nav-item ms-lg-3 d-flex align-items-center">
-                            <span class="user-name mb-0">Hi, @(User.Identity?.Name ?? "User")</span>
-                            <a class="btn btn-outline-danger btn-sm" asp-controller="Account" asp-action="Logout">Logout</a>
-                        </li>
-                    }
-                    else
-                    {
-                        <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Login</a></li>
-                    }
-                </ul>
+    @if (hideSidebar)
+    {
+        <div class="auth-wrapper">
+            <div class="container">
+                <div class="row justify-content-center">
+                    @RenderBody()
+                </div>
             </div>
         </div>
-    </nav>
+    }
+    else
+    {
+        <div class="layout-wrapper">
+            
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    @if (User.IsInRole("Admin")) 
+                    { 
+                        <a asp-controller="Report" asp-action="Index" class="text-white text-decoration-none">
+                            <span><i class="bi bi-shield-lock-fill me-2"></i>HotelMS (Admin)</span>
+                        </a> 
+                    }
+                    else if (User.IsInRole("Manager")) 
+                    { 
+                        <a asp-controller="Manager" asp-action="Index" class="text-white text-decoration-none">
+                            <span><i class="bi bi-briefcase-fill me-2"></i>HotelMS (Manager)</span>
+                        </a> 
+                    }
+                    else if (User.IsInRole("Housekeeping")) 
+                    { 
+                        <a asp-controller="Housekeeping" asp-action="StaffIndex" class="text-white text-decoration-none">
+                            <span><i class="bi bi-stars me-2"></i>HotelMS (Staff)</span>
+                        </a> 
+                    }
+                    else if (User.IsInRole("Receptionist")) 
+                    { 
+                        <a asp-controller="Reception" asp-action="Index" class="text-white text-decoration-none">
+                            <span><i class="bi bi-telephone-fill me-2"></i>HotelMS (Reception)</span>
+                        </a> 
+                    }
+                    else if (User.IsInRole("Guest")) 
+                    { 
+                        <a asp-controller="GuestPortal" asp-action="Index" class="text-white text-decoration-none">
+                            <span><i class="bi bi-person-circle me-2"></i>HotelMS (Guest)</span>
+                        </a> 
+                    }
+                    else 
+                    { 
+                        <a href="/" class="text-white text-decoration-none">
+                            <span><i class="bi bi-building me-2"></i>HotelMS</span>
+                        </a> 
+                    }
+                </div>
 
-    <div class="container">
-        @RenderBody()
+                <ul class="sidebar-menu">
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li><a class="sidebar-link fw-bold" asp-controller="Report" asp-action="Index"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a></li>
+                        <li><a class="sidebar-link fw-bold" asp-controller="Room" asp-action="Index"><i class="bi bi-door-open me-3"></i> Rooms</a></li>
+
+                        <li>
+                            <a href="#adminBookings" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-journal-bookmark me-3"></i> Bookings</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminBookings">
+                                <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Create"><i class="bi bi-calendar-plus me-2"></i> New Booking</a></li>
+                                <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Index"><i class="bi bi-calendar-check me-2"></i> All Bookings</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#adminGuests" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-people me-3"></i> Guests</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminGuests">
+                                <li><a class="sidebar-link" asp-controller="Guest" asp-action="Create"><i class="bi bi-person-plus me-2"></i> Register Guest</a></li>
+                                <li><a class="sidebar-link" asp-controller="Guest" asp-action="Index"><i class="bi bi-person-lines-fill me-2"></i> All Guests</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#adminFinance" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-wallet2 me-3"></i> Financials</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminFinance">
+                                <li><a class="sidebar-link" asp-controller="Billing" asp-action="Index"><i class="bi bi-cash-coin me-2"></i> Billing Dashboard</a></li>
+                                <li><a class="sidebar-link" asp-controller="Billing" asp-action="AllInvoices"><i class="bi bi-receipt me-2"></i> All Invoices</a></li>
+                            </ul>
+                        </li>
+
+                        
+                        <li>
+                            <a href="#adminHR" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-person-vcard me-3"></i> HR & Staff</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminHR">
+                                <li><a class="sidebar-link" asp-controller="StaffDirectory" asp-action="StaffList"><i class="bi bi-people me-2"></i> Staff Directory</a></li>
+                                <li><a class="sidebar-link" asp-controller="StaffDirectory" asp-action="Attendance"><i class="bi bi-calendar2-check me-2"></i> Daily Attendance</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#adminHK" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-bucket-fill me-1"></i><i class="bi bi-stars me-2" style="font-size: 0.7rem; vertical-align: top;"></i> Housekeeping</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminHK">
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="Index"><i class="bi bi-clipboard-check me-2"></i> Pending Tasks</a></li>
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="AllTasks"><i class="bi bi-list-task me-2"></i> All Tasks</a></li>
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="PerformanceReport"><i class="bi bi-graph-up-arrow me-2"></i> Staff Performance</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#adminReports" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-bar-chart me-3"></i> Reports</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="adminReports">
+                                <li><a class="sidebar-link" asp-controller="Report" asp-action="OccupancyReport"><i class="bi bi-building-check me-2"></i> Occupancy Report</a></li>
+                                <li><a class="sidebar-link" asp-controller="Report" asp-action="RevenueAnalysis"><i class="bi bi-currency-dollar me-2"></i> Revenue Analysis</a></li>
+                            </ul>
+                        </li>
+                    }
+                    else if (User.IsInRole("Manager"))
+                    {
+                        <li><a class="sidebar-link fw-bold" asp-controller="Manager" asp-action="Index"><i class="bi bi-speedometer2 me-3"></i> Dashboard</a></li>
+                        <li><a class="sidebar-link fw-bold" asp-controller="Manager" asp-action="Rooms"><i class="bi bi-door-open me-3"></i> Rooms</a></li>
+
+                        <li>
+                            <a href="#mgrAssignments" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-card-checklist me-3"></i> Staff Assignments</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="mgrAssignments">
+                                <li><a class="sidebar-link" asp-controller="Manager" asp-action="Housekeeping"><i class="bi bi-person-lines-fill me-2"></i> Assign Tasks</a></li>
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="Index"><i class="bi bi-clock-history me-2"></i> View Pending</a></li>
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="PerformanceReport"><i class="bi bi-graph-up me-2"></i> Performance</a></li>
+                            </ul>
+                        </li>
+
+
+                        <li>
+                            <a href="#mgrReports" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-bar-chart me-3"></i> Reports</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="mgrReports">
+                                <li><a class="sidebar-link" asp-controller="Report" asp-action="OccupancyReport"><i class="bi bi-building-check me-2"></i> Occupancy Report</a></li>
+                                <li><a class="sidebar-link" asp-controller="Report" asp-action="RevenueAnalysis"><i class="bi bi-currency-dollar me-2"></i> Revenue Analysis</a></li>
+                            </ul>
+                        </li>
+                    }
+                    else if (User.IsInRole("Receptionist"))
+                    {
+                        <li><a class="sidebar-link fw-bold" asp-controller="Reception" asp-action="Index"><i class="bi bi-front me-3"></i> Front Desk</a></li>
+
+                        <li>
+                            <a href="#recBookings" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-journal-bookmark me-3"></i> Bookings</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="recBookings">
+                                <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Create"><i class="bi bi-calendar-plus me-2"></i> New Booking</a></li>
+                                <li><a class="sidebar-link" asp-controller="Reservation" asp-action="Index"><i class="bi bi-calendar-check me-2"></i> All Bookings</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#recGuests" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-people me-3"></i> Guests</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="recGuests">
+                                <li><a class="sidebar-link" asp-controller="Guest" asp-action="Create"><i class="bi bi-person-plus me-2"></i> Register Guest</a></li>
+                                <li><a class="sidebar-link" asp-controller="Guest" asp-action="Index"><i class="bi bi-person-lines-fill me-2"></i> All Guests</a></li>
+                            </ul>
+                        </li>
+
+                        <li>
+                            <a href="#recFinance" data-bs-toggle="collapse" class="sidebar-link sidebar-dropdown-toggle">
+                                <span><i class="bi bi-wallet2 me-3"></i> Financials</span>
+                                <i class="bi bi-chevron-down chevron-icon"></i>
+                            </a>
+                            <ul class="collapse list-unstyled" id="recFinance">
+                                <li><a class="sidebar-link" asp-controller="Billing" asp-action="Index"><i class="bi bi-cash-coin me-2"></i> Billing</a></li>
+                                <li><a class="sidebar-link" asp-controller="Billing" asp-action="AllInvoices"><i class="bi bi-receipt me-2"></i> All Invoices</a></li>
+                            </ul>
+                        </li>
+                    }
+                    else if (User.IsInRole("Housekeeping"))
+                    {
+                        <li>
+                                <li><a class="sidebar-link text-warning fw-bold" asp-controller="Housekeeping" asp-action="StaffIndex"><i class="bi bi-broom me-2"></i> My Daily Tasks</a></li>
+                                <li><a class="sidebar-link" asp-controller="Housekeeping" asp-action="History"><i class="bi bi-clock-history me-2"></i> Cleaning History</a></li>
+                                <li><a class="sidebar-link text-info" asp-controller="Housekeeping" asp-action="PerformanceReport"><i class="bi bi-award me-2"></i> Performance Report</a></li>
+                        
+                        </li>
+                    }
+                    else if (User.IsInRole("Guest"))
+                    {
+                        <li><a class="sidebar-link fw-bold" asp-controller="GuestPortal" asp-action="Index"><i class="bi bi-person-circle me-3"></i> My Dashboard</a></li>
+                        <li><a class="sidebar-link fw-bold" asp-controller="GuestPortal" asp-action="BookRoom"><i class="bi bi-calendar-plus me-3"></i> Book a Room</a></li>
+                    }
+
+                    @if (User.Identity != null && !User.Identity.IsAuthenticated)
+                    {
+                        <li><a class="sidebar-link fw-bold" asp-controller="Account" asp-action="Login"><i class="bi bi-box-arrow-in-right me-3"></i> Login</a></li>
+                        <li><a class="sidebar-link" asp-controller="Account" asp-action="Register"><i class="bi bi-person-plus me-3"></i> Register Account</a></li>
+                    }
+                </ul>
+
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    // --- DETERMINE THE DISPLAY NAME ---
+                    string displayName = "User";
+    
+                    // 1. If Admin, force it to just say "Admin"
+                    if (User.IsInRole("Admin")) 
+                    { 
+                        displayName = "Admin"; 
+                    }
+                    else 
+                    { 
+                        // 2. For everyone else, grab their real Full Name from their login cookie
+                        var fullNameClaim = User.Claims.FirstOrDefault(c => c.Type == "FullName");
+        
+                        if (fullNameClaim != null && !string.IsNullOrWhiteSpace(fullNameClaim.Value))
+                        {
+                            displayName = fullNameClaim.Value;
+                        }
+                        else
+                        {
+                            // A failsafe just in case the name isn't found
+                            displayName = User.Identity.Name?.Split('@')[0] ?? "User";
+                        }
+                    }
+
+                    <div class="sidebar-footer d-flex justify-content-between align-items-center">
+                        <div class="text-truncate text-white" style="max-width: 140px; font-size: 0.95rem; font-weight: 500;">
+                            <i class="bi bi-person-fill text-muted me-1"></i> @displayName
+                        </div>
+            
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 p-0">
+                            <button type="button" class="btn btn-sm btn-outline-danger border-0" title="Logout" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
+                                <i class="bi bi-power fs-5"></i>
+                            </button>
+                        </form>
+            
+                    </div>
+                }
+            </div>
+
+            <div class="content-area">
+                <div class="main-container">
+                    @RenderBody()
+                </div>
+            </div>
+
+        </div>
+    }
+
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0" style="border-radius: 15px;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-primary" id="logoutModalLabel">Confirm Logout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-box-arrow-right text-warning mb-3" style="font-size: 3.5rem;"></i>
+                    <h5 class="text-dark">Do you wish to log out?</h5>
+                    <p class="text-muted mb-0">You will be securely logged out and returned to the main portal.</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center gap-2 pb-4">
+                    <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">Cancel</button>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0 p-0">
+                        <button type="submit" class="btn btn-danger fw-bold px-4 shadow-sm">Confirm</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // 1. Get current path and normalize it
+        var currentPath = window.location.pathname.toLowerCase();
+        if (currentPath.endsWith('/')) {
+            currentPath = currentPath.slice(0, -1);
+        }
+
+        // 2. Find all sidebar links
+        var sidebarLinks = document.querySelectorAll('.sidebar-menu a.sidebar-link');
+
+        sidebarLinks.forEach(function(link) {
+            var href = link.getAttribute('href');
+            if (href && href !== '#') {
+                var linkPath = href.toLowerCase();
+                if (linkPath.endsWith('/')) {
+                    linkPath = linkPath.slice(0, -1);
+                }
+
+                // 3. Match Logic: Check for exact match or logical sub-path
+                // The check linkPath.length > 1 prevents the Home/Dashboard (/) from matching everything
+                if (currentPath === linkPath || (linkPath.length > 1 && currentPath.startsWith(linkPath))) {
+                    
+                    // Highlight the clicked child item
+                    link.classList.add('active-item');
+
+                    // 4. Handle Parent Dropdowns (Expansion)
+                    var parentCollapse = link.closest('.collapse');
+                    
+                    if (parentCollapse) {
+                        // Show the dropdown content
+                        parentCollapse.classList.add('show'); 
+                        
+                        // Find the toggle button that controls this specific collapse
+                        var toggleId = parentCollapse.getAttribute('id');
+                        var toggleLink = document.querySelector('[href="#' + toggleId + '"]');
+                        
+                        if (toggleLink) {
+                            toggleLink.setAttribute('aria-expanded', 'true');
+                            toggleLink.classList.add('active-parent');
+                            
+                            // Ensure chevron icon is rotated (Bootstrap logic)
+                            toggleLink.classList.remove('collapsed');
+                        }
+                    }
+                }
+            }
+        });
+    });
+    </script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

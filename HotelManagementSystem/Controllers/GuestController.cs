@@ -1,22 +1,61 @@
-using HotelManagementSystem.Models;
-using HotelManagementSystem.Services;
-using HotelManagementSystem.Data;   
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using HotelManagementSystem.Data;
+using HotelManagementSystem.Models;
 using System.Linq;
 
 namespace HotelManagementSystem.Controllers
 {
+    [Authorize(Roles = "Admin,Manager,Receptionist")]
     public class GuestController : Controller
     {
-        private readonly IGuestService _guestService;
         private readonly ApplicationDbContext _context;
 
-        public GuestController(IGuestService guestService, ApplicationDbContext context)
+        public GuestController(ApplicationDbContext context)
         {
-            _guestService = guestService;
             _context = context;
+        }
+
+        public IActionResult Index()
+        {
+            var guests = _context.Guests.ToList();
+            return View(guests);
+        }
+
+        [HttpGet]
+        public IActionResult FindByPhone(string phone)
+        {
+            if (string.IsNullOrEmpty(phone)) return Json(new object[] { });
+
+            var matches = _context.Guests
+                .Where(g => g.ContactInfo.Contains(phone))
+                .Select(g => new {
+                    id = g.GuestId,
+                    name = g.Name,
+                    email = g.Email,
+                    phone = g.ContactInfo
+                })
+                .ToList();
+
+            return Json(matches);
+        }
+
+        [HttpGet]
+        public IActionResult FindByEmail(string email)
+        {
+            if (string.IsNullOrEmpty(email)) return Json(null);
+
+            var guest = _context.Guests
+                .Where(g => g.Email == email)
+                .Select(g => new {
+                    id = g.GuestId,
+                    name = g.Name,
+                    email = g.Email,
+                    phone = g.ContactInfo
+                })
+                .FirstOrDefault();
+
+            return Json(guest);
         }
 
         [HttpGet]
@@ -33,75 +72,64 @@ namespace HotelManagementSystem.Controllers
         [HttpPost]
         public IActionResult Create(Guest guest)
         {
-            var result = _guestService.CreateGuest(guest);
-
-            if (!result.IsSuccess)
+            if (ModelState.IsValid)
             {
-                ViewBag.Error = result.ErrorMessage;
-                return View(guest);
+                if (_context.Guests.Any(g => g.Email == guest.Email || g.ContactInfo == guest.ContactInfo))
+                {
+                    ViewBag.Error = "This guest is already registered in the system.";
+                    return View(guest);
+                }
+
+                guest.Password = BCrypt.Net.BCrypt.HashPassword("Welcome@123");
+                guest.RecoveryPin = BCrypt.Net.BCrypt.HashPassword("1234");
+                guest.RequiresPasswordReset = true;
+
+                _context.Guests.Add(guest);
+                _context.SaveChanges();
+
+                TempData["Success"] = "Guest registered successfully!";
+                return RedirectToAction("Index");
             }
-
-            return RedirectToAction("Index");
-        }
-
-        [HttpGet]
-        public IActionResult Index()
-        {
-            var guests = _guestService.GetAllGuests();
-            return View(guests);
-        }
-
-        [HttpGet]
-        public IActionResult FindByPhone(string phone)
-        {
-            if (string.IsNullOrWhiteSpace(phone))
-            {
-                return BadRequest();
-            }
-
-            var matches = _guestService.FindByPhone(phone)
-                .Select(g => new { name = g.Name, email = g.Email, phone = g.ContactInfo })
-                .ToList();
-
-            return Json(matches);
-        }
-
-        [HttpGet]
-        public IActionResult FindByEmail(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                return BadRequest();
-            }
-
-            var match = _guestService.FindByEmail(email);
-            if (match != null)
-            {
-                return Json(new { name = match.Name, email = match.Email, phone = match.ContactInfo });
-            }
-
-            return Json(null);
+            return View(guest);
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager,Receptionist")] // Only staff can do this!
+        public IActionResult CreateAjax([FromBody] Guest guest)
+        {
+            if (string.IsNullOrEmpty(guest.Name) || string.IsNullOrEmpty(guest.Email) || string.IsNullOrEmpty(guest.ContactInfo))
+            {
+                return Json(new { success = false, message = "Please fill in all fields." });
+            }
+
+            if (_context.Guests.Any(g => g.Email == guest.Email || g.ContactInfo == guest.ContactInfo))
+            {
+                return Json(new { success = false, message = "A guest with this Email or Phone already exists." });
+            }
+
+            guest.Password = BCrypt.Net.BCrypt.HashPassword("Welcome@123");
+            guest.RecoveryPin = BCrypt.Net.BCrypt.HashPassword("1234");
+            guest.RequiresPasswordReset = true;
+
+            _context.Guests.Add(guest);
+            _context.SaveChanges();
+
+            return Json(new
+            {
+                success = true,
+                guest = new { name = guest.Name, email = guest.Email, phone = guest.ContactInfo }
+            });
+        }
+
+        [HttpPost]
         public IActionResult ForceResetGuestPassword(int guestId)
         {
             var guest = _context.Guests.Find(guestId);
             if (guest != null)
             {
-                // 1. Change password to default
-                guest.Password = "Hotel@1234";
-
-                // 2. Flip the switch so they MUST change it on their next login
+                guest.Password = BCrypt.Net.BCrypt.HashPassword("Hotel@1234");
                 guest.RequiresPasswordReset = true;
-
                 _context.SaveChanges();
-
-                TempData["Success"] = $"Success! Password for {guest.Name} has been reset to: Hotel@1234";
             }
-
-            // Refresh the guest list page
             return RedirectToAction("Index");
         }
     }

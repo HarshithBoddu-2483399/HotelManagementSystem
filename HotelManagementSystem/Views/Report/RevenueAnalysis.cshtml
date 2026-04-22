@@ -152,7 +152,60 @@
             </div>
         </div>
     </div>
+
+
 </div>
+<div class="card shadow-sm mt-4 border-0">
+    <div class="card-header bg-dark text-white d-flex align-items-center">
+        <i class="bi bi-bar-chart-line me-2"></i>
+        <strong>Revenue Trend - @(ViewBag.SelectedDateRange == "thismonth" ? "Daily/Weekly" : "Custom Range")</strong>
+    </div>
+    <div class="card-body" style="height: 400px;">
+        <canvas id="revenueChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        
+        // Data passed from Controller
+        const labels = @Html.Raw(Json.Serialize(ViewBag.ChartLabels));
+        const dataValues = @Html.Raw(Json.Serialize(ViewBag.ChartValues));
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Revenue (₹)',
+                    data: dataValues,
+                    backgroundColor: 'rgba(40, 167, 69, 0.7)', // Matches your Green "Total Revenue" card
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) { return '₹' + value; }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
 
 <style>
     .border-success { border-left: 4px solid #28a745 !important; }

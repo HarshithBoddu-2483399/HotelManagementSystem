@@ -39,6 +39,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseStatusCodePagesWithReExecute("/Home/Error404");
+
 app.UseRouting();
 
 app.UseAuthentication();
@@ -47,31 +49,5 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");
-
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    if (!context.Users.Any(u => u.Role == "Manager"))
-    {
-        context.Users.Add(new User { Username = "manager@hotel.com", Password = "Manager@123", Role = "Manager" });
-        context.SaveChanges();
-    }
-}
-
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-    if (!context.Users.Any(u => u.Username == "staff1@hotel.com"))
-    {
-        context.Users.Add(new User
-        {
-            Username = "staff1@hotel.com",
-            Password = "Staff@123",
-            Role = "Housekeeping"
-        });
-        context.SaveChanges();
-    }
-}
 
 app.Run();

@@ -1,18 +1,24 @@
 @{
-    Layout = "_Layout";
-    ViewData["Title"] = "Not Found";
+    ViewData["Title"] = "Page Not Found";
+    ViewData["HideSidebar"] = true;
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card text-center shadow-sm">
-                <div class="card-body">
-                    <h3 class="card-title">Resource Not Found</h3>
-                    <p class="card-text">The resource you are looking for does not exist or has already been removed.</p>
-                    <a href="/Room" class="btn btn-primary">Back to Rooms</a>
-                </div>
-            </div>
-        </div>
+<div class="container d-flex flex-column justify-content-center align-items-center mt-5 pt-5 text-center">
+    
+    <h1 class="display-1 fw-bold text-primary mb-0">404</h1>
+    <h2 class="mb-4 text-dark">Lost your room key?</h2>
+    
+    <p class="lead text-muted mb-5" style="max-width: 600px;">
+        The page you are looking for might have been removed, had its name changed, or is temporarily unavailable. Let's get you back to the lobby.
+    </p>
+
+    <div class="d-flex gap-3">
+        <button onclick="history.back()" class="btn btn-outline-secondary px-4 py-2 fw-bold shadow-sm">
+            <i class="bi bi-arrow-left me-2"></i> Go Back
+        </button>
+        
+        <button type="button" class="btn btn-primary px-4 py-2 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
+            <i class="bi bi-house-door me-2"></i> Return to Home Page
+        </button>
     </div>
 </div>

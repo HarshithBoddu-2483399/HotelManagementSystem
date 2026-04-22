@@ -22,5 +22,9 @@ namespace HotelManagementSystem.ViewModels
         [Required(ErrorMessage = "Please confirm your password.")]
         [Compare("NewPassword", ErrorMessage = "Passwords do not match.")]
         public string ConfirmNewPassword { get; set; }
+
+        [Required(ErrorMessage = "Please create a 4-digit recovery PIN.")]
+        [RegularExpression(@"^\d{4}$", ErrorMessage = "PIN must be exactly 4 digits.")]
+        public string RecoveryPin { get; set; }
     }
 }
