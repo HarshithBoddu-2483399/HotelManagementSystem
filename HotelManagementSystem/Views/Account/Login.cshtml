@@ -7,8 +7,34 @@
     <title>Hotel Login</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <style>
-            body { background: #f4f7f6; display: flex; align-items: center; justify-content: center; height: 100vh; }
-            .login-card { width: 400px; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background: white; }
+            body {
+                /* Replace the URL below with your actual image path */
+                background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            .login-card {
+                width: 400px;
+                padding: 30px;
+                border-radius: 15px;
+                /* Using a slight transparency (rgba) makes it look modern against the background */
+                background: rgba(255, 255, 255, 0.95);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            }
+
+            .btn-primary {
+                background-color: #007bff;
+                border: none;
+                padding: 10px;
+            }
     </style>
 </head>
 <body>
@@ -16,25 +42,34 @@
         <h3 class="text-center mb-4">Hotel Management Login</h3>
         <form asp-action="Login" method="post">
             <div class="mb-3">
-                <label>Email / Username</label>
-                <input type="text" name="username" class="form-control" required />
+                <label class="form-label">Email / Username</label>
+                <input type="text" name="username" class="form-control" placeholder="Enter your email" required />
             </div>
             <div class="mb-3">
-                <label>Password</label>
-                <input type="password" name="password" class="form-control" required />
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" placeholder="Enter password" required />
             </div>
+            
             @if (ViewBag.Error != null)
             {
-                <p class="text-danger">@ViewBag.Error</p>
+                <div class="alert alert-danger py-2" role="alert">
+                    <small>@ViewBag.Error</small>
+                </div>
             }
-            <button type="submit" class="btn btn-primary w-100">Login</button>
+
+            <button type="submit" class="btn btn-primary w-100 mt-2">Login</button>
         </form>
-        <p class="mt-3 text-muted text-center" style="font-size: 0.8rem;">Admin portal details - admin@hotel.com / Admin@123 </p>
+
+        <hr />
+        
         <div class="text-center mt-3">
-            <p class="text-muted">Don't have an account? <a href="/Account/Register" class="fw-bold">Sign up here</a></p>
-            <p class="text-muted"><a href="/Account/ForgotPassword" class="fw-bold">Forgot Password!</a></p>
+            <p class="mb-1" style="font-size: 0.85rem;">Don't have an account? <a href="/Account/Register" class="text-decoration-none fw-bold">Sign up here</a></p>
+            <p class="mb-0" style="font-size: 0.85rem;"><a href="/Account/ForgotPassword" class="text-decoration-none fw-bold text-muted">Forgot Password?</a></p>
+        </div>
+
+        <div class="mt-4 p-2 bg-light rounded border text-center">
+            <small class="text-muted">Admin: admin@hotel.com / Admin@123</small>
         </div>
     </div>
-    
 </body>
 </html>

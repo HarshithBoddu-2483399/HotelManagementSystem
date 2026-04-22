@@ -50,7 +50,7 @@ namespace HotelManagementSystem.Services
                 }
             }
 
-            return null; // Invalid credentials
+            return null;
         }
     }
 }

@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+//Authentication Configuration
 builder.Services.AddAuthentication("CookieAuth")
     .AddCookie("CookieAuth", options =>
     {
@@ -43,8 +44,8 @@ app.UseStatusCodePagesWithReExecute("/Home/Error404");
 
 app.UseRouting();
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthentication(); // "Who are you?" (Checks for the cookie)
+app.UseAuthorization(); // "Are you allowed?" (Checks the Roles)
 
 app.MapControllerRoute(
     name: "default",
