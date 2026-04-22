@@ -3,22 +3,27 @@
     ViewData["HideSidebar"] = true;
 }
 
-<div class="container d-flex flex-column justify-content-center align-items-center mt-5 pt-5 text-center">
-    
-    <h1 class="display-1 fw-bold text-primary mb-0">404</h1>
-    <h2 class="mb-4 text-dark">Lost your room key?</h2>
-    
-    <p class="lead text-muted mb-5" style="max-width: 600px;">
-        The page you are looking for might have been removed, had its name changed, or is temporarily unavailable. Let's get you back to the lobby.
-    </p>
 
-    <div class="d-flex gap-3">
-        <button onclick="history.back()" class="btn btn-outline-secondary px-4 py-2 fw-bold shadow-sm">
-            <i class="bi bi-arrow-left me-2"></i> Go Back
-        </button>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 50vh;">
+    <div class="card shadow-lg border-0 rounded-4 p-2 text-center bg-white" style="max-width: 500px;">
+        <div class="container d-flex flex-column justify-content-center align-items-center mt-5 pt-5 text-center">
+    
+            <h1 class="display-1 fw-bold text-primary mb-0">404</h1>
+            <h2 class="mb-4 text-dark">Lost your room key?</h2>
+    
+            <p class="lead text-muted mb-5" style="max-width: 600px;">
+                The page you are looking for might have been removed, had its name changed, or is temporarily unavailable. Let's get you back to the lobby.
+            </p>
+
+            <div class="d-flex gap-3">
+                <button onclick="history.back()" class="btn btn-outline-secondary px-4 py-2 fw-bold shadow-sm">
+                    <i class="bi bi-arrow-left me-2"></i> Go Back
+                </button>
         
-        <button type="button" class="btn btn-primary px-4 py-2 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
-            <i class="bi bi-house-door me-2"></i> Return to Home Page
-        </button>
+                <button type="button" class="btn btn-primary px-4 py-2 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
+                    <i class="bi bi-house-door me-2"></i> Return to Home Page
+                </button>
+            </div>
+        </div>
     </div>
 </div>

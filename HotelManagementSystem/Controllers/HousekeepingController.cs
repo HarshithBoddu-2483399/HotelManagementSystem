@@ -91,6 +91,31 @@ namespace HotelManagementSystem.Controllers
             return View(history);
         }
 
+        [HttpPost]
+        [Authorize(Roles = "Admin,Manager")] // Optional: Secures this so only Admins/Managers can force clean
+        public async Task<IActionResult> MarkClean(int taskId)
+        {
+            // 1. Find the task in the database
+            var task = _context.HousekeepingTasks.FirstOrDefault(t => t.TaskId == taskId);
+
+            if (task == null)
+            {
+                return NotFound(); // Safety check
+            }
+
+            // 2. Update the status to completed
+            task.TaskStatus = "COMPLETED";
+
+            // If you have a CompletedAt or CheckoutTime column, update it here!
+            // task.CompletedAt = DateTime.Now; 
+
+            // 3. Save changes to the database
+            _context.SaveChanges();
+
+            // 4. Redirect back to the All Tasks page to see the updated green badge
+            return RedirectToAction("AllTasks");
+        }
+
         [Authorize(Roles = "Admin,Manager,Housekeeping")]
         public IActionResult PerformanceReport(DateTime? startDate, DateTime? endDate, int? staffId)
         {

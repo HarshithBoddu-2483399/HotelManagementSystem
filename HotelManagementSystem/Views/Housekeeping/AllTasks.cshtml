@@ -48,9 +48,9 @@
                             <td>
                                 @if (task.TaskStatus == "PENDING")
                                 {
-                                    <form action="/Housekeeping/MarkClean" method="post" style="display:inline-block;">
+                                    <form asp-controller="Housekeeping" asp-action="MarkClean" method="post" style="display:inline-block;">
                                         <input type="hidden" name="taskId" value="@task.TaskId" />
-                                        <button type="submit" class="btn btn-sm btn-success">Mark Clean</button>
+                                        <button type="submit" class="btn btn-sm btn-success fw-bold shadow-sm">Mark Clean</button>
                                     </form>
                                 }
                                 else
