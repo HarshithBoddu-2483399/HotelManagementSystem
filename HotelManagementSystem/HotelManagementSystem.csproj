@@ -5,6 +5,8 @@
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 	  <NuGetAudit>false</NuGetAudit>
+	  <NuGetAuditLevel>moderate</NuGetAuditLevel>
+	  <NoWarn>$(NoWarn);NU1901</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

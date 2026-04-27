@@ -30,7 +30,11 @@ namespace HotelManagementSystem.Tests
         // Helper to set up TempData for the controller (since we test TempData messages)
         private ManagerController SetupController(ApplicationDbContext context, IManagerService service)
         {
-            var controller = new ManagerController(service, context)
+            // FIX: Created a dummy mock for IRoomService to satisfy the updated constructor
+            var mockRoomService = new Mock<IRoomService>();
+
+            // FIX: Injected mockRoomService.Object into the controller instantiation
+            var controller = new ManagerController(service, context, mockRoomService.Object)
             {
                 TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>())
             };

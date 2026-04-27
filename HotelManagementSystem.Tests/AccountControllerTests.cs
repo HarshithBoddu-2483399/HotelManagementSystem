@@ -1,5 +1,4 @@
 ﻿using HotelManagementSystem.Controllers;
-using HotelManagementSystem.Data;
 using HotelManagementSystem.Models;
 using HotelManagementSystem.Services;
 using HotelManagementSystem.ViewModels;
@@ -7,7 +6,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using NUnit.Framework;
 using System;
@@ -19,18 +17,12 @@ namespace HotelManagementSystem.Tests.Controllers
     public class AccountControllerTests
     {
         private Mock<IAccountService> _mockAccountService;
-        private ApplicationDbContext _context;
         private AccountController _controller;
 
         [SetUp]
         public void SetUp()
         {
-            // 1. Setup the In-Memory Database
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-                .Options;
-
-            _context = new ApplicationDbContext(options);
+            // 1. Setup the Mock Service (No more database context needed in the controller tests!)
             _mockAccountService = new Mock<IAccountService>();
 
             // 2. Setup the tricky HttpContext for SignInAsync/SignOutAsync
@@ -46,27 +38,25 @@ namespace HotelManagementSystem.Tests.Controllers
             // 3. Setup TempData
             var tempDataMock = new Mock<ITempDataDictionary>();
 
-            // 4. Setup the UrlHelper to fix the RedirectToAction crash!
+            // 4. Setup the UrlHelper
             var urlHelperMock = new Mock<IUrlHelper>();
 
-            // 5. Initialize Controller with all our fakes
-            _controller = new AccountController(_mockAccountService.Object, _context)
+            // 5. Initialize Controller with only the Mock Service
+            _controller = new AccountController(_mockAccountService.Object)
             {
                 ControllerContext = new ControllerContext
                 {
                     HttpContext = httpContextMock.Object
                 },
                 TempData = tempDataMock.Object,
-                Url = urlHelperMock.Object // <--- ADD THIS LINE
+                Url = urlHelperMock.Object
             };
         }
 
         [TearDown]
         public void TearDown()
         {
-            // Clean up to prevent memory leaks
-            _context?.Database.EnsureDeleted();
-            _context?.Dispose();
+            // Clean up
             _controller?.Dispose();
         }
 
@@ -84,12 +74,13 @@ namespace HotelManagementSystem.Tests.Controllers
         public async Task Login_Post_InvalidCredentials_ReturnsViewWithError()
         {
             // Arrange
-            // Simulate service returning null for bad credentials
+            // UPDATED: Use AuthenticateAsync
             _mockAccountService
-                .Setup(s => s.Authenticate("baduser", "badpass"))
-                .ReturnsAsync((User)null); // Replace 'User' with your exact auth user model name
+                .Setup(s => s.AuthenticateAsync("baduser", "badpass"))
+                .ReturnsAsync((User)null);
 
             // Act
+            // UPDATED: Added await
             var result = await _controller.Login("baduser", "badpass");
 
             // Assert
@@ -103,11 +94,13 @@ namespace HotelManagementSystem.Tests.Controllers
         {
             // Arrange
             var adminUser = new User { UserId = 1, Username = "admin", Role = "Admin" };
+            // UPDATED: Use AuthenticateAsync
             _mockAccountService
-                .Setup(s => s.Authenticate("admin", "pass123"))
+                .Setup(s => s.AuthenticateAsync("admin", "pass123"))
                 .ReturnsAsync(adminUser);
 
             // Act
+            // UPDATED: Added await
             var result = await _controller.Login("admin", "pass123");
 
             // Assert
@@ -128,13 +121,9 @@ namespace HotelManagementSystem.Tests.Controllers
         }
 
         [Test]
-        public void Register_Post_EmailAlreadyExists_ReturnsViewWithError()
+        public async Task Register_Post_EmailAlreadyExists_ReturnsViewWithError()
         {
             // Arrange
-            // Add a guest to our In-Memory database so it "exists"
-            _context.Guests.Add(new Guest { Email = "test@test.com", ContactInfo = "1234567890" });
-            _context.SaveChanges();
-
             var model = new GuestRegisterViewModel
             {
                 Email = "test@test.com",
@@ -143,18 +132,23 @@ namespace HotelManagementSystem.Tests.Controllers
                 RecoveryPin = "1234"
             };
 
+            // UPDATED: Mock the service to return a failed tuple response
+            _mockAccountService
+                .Setup(s => s.RegisterGuestAsync(model))
+                .ReturnsAsync((false, "Already a user with this email ID exists."));
+
             // Act
-            var result = _controller.Register(model);
+            // UPDATED: Added await
+            var result = await _controller.Register(model);
 
             // Assert
             var viewResult = result as ViewResult;
             Assert.That(viewResult, Is.Not.Null);
-            // Verify the ModelState contains the error we expect
             Assert.That(_controller.ModelState.ContainsKey("Email"), Is.True);
         }
 
         [Test]
-        public void Register_Post_ValidModel_AddsGuestAndRedirectsToLogin()
+        public async Task Register_Post_ValidModel_RedirectsToLogin()
         {
             // Arrange
             var model = new GuestRegisterViewModel
@@ -166,25 +160,21 @@ namespace HotelManagementSystem.Tests.Controllers
                 RecoveryPin = "1234"
             };
 
+            // UPDATED: Mock the service to return a successful tuple response
+            _mockAccountService
+                .Setup(s => s.RegisterGuestAsync(model))
+                .ReturnsAsync((true, string.Empty));
+
             // Act
-            var result = _controller.Register(model);
+            // UPDATED: Added await
+            var result = await _controller.Register(model);
 
             // Assert
-            // 1. Check the response type
             var redirectResult = result as RedirectToActionResult;
             Assert.That(redirectResult, Is.Not.Null);
             Assert.That(redirectResult.ActionName, Is.EqualTo("Login"));
-
-            // 2. Verify TempData success message was set
             Assert.That(_controller.TempData["Success"], Is.EqualTo("Registration successful! You can now log in."));
-
-            // 3. Verify the Guest was actually saved to our in-memory database
-            var savedGuest = _context.Guests.FirstOrDefault(g => g.Email == "newuser@test.com");
-            Assert.That(savedGuest, Is.Not.Null);
-            Assert.That(savedGuest.Name, Is.EqualTo("John Doe"));
-
-            // 4. Verify password was hashed (it shouldn't equal plain text)
-            Assert.That(savedGuest.Password, Is.Not.EqualTo("Password123!"));
+            // Note: We no longer test database insertions here. That belongs in an 'AccountServiceTests.cs' file!
         }
     }
 }
