@@ -37,14 +37,31 @@ namespace HotelManagementSystem.Services
             }
         }
 
-        public void ToggleMaintenance(int roomId)
+        // UPDATED: Strict status validation
+        public (bool Success, string Message) ToggleMaintenance(int roomId)
         {
             var room = _context.Rooms.Find(roomId);
             if (room != null)
             {
-                room.Status = room.Status == "MAINTENANCE" ? "AVAILABLE" : "MAINTENANCE";
-                _context.SaveChanges();
+                if (room.Status == "AVAILABLE")
+                {
+                    room.Status = "MAINTENANCE";
+                    _context.SaveChanges();
+                    return (true, "Room placed under maintenance.");
+                }
+                else if (room.Status == "MAINTENANCE")
+                {
+                    room.Status = "AVAILABLE";
+                    _context.SaveChanges();
+                    return (true, "Room is now available.");
+                }
+                else
+                {
+                    // Fails safely for BOOKED, OCCUPIED, DIRTY, etc.
+                    return (false, $"Room is currently {room.Status} and cannot be kept under maintenance.");
+                }
             }
+            return (false, "Room not found.");
         }
     }
 }

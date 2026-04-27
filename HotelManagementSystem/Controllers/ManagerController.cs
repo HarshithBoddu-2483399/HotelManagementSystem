@@ -13,11 +13,14 @@ namespace HotelManagementSystem.Controllers
     {
         private readonly IManagerService _managerService;
         private readonly ApplicationDbContext _context;
+        // ADDED: IRoomService to share the strict validation logic
+        private readonly IRoomService _roomService;
 
-        public ManagerController(IManagerService managerService, ApplicationDbContext context)
+        public ManagerController(IManagerService managerService, ApplicationDbContext context, IRoomService roomService)
         {
             _managerService = managerService;
             _context = context;
+            _roomService = roomService;
         }
 
         public IActionResult Index()
@@ -35,12 +38,15 @@ namespace HotelManagementSystem.Controllers
         [HttpPost]
         public IActionResult ToggleMaintenance(int roomId)
         {
-            var room = _context.Rooms.Find(roomId);
-            if (room != null)
+            // UPDATED: Use the secure RoomService logic instead of direct context updates
+            var result = _roomService.ToggleMaintenance(roomId);
+
+            if (!result.Success)
             {
-                room.Status = room.Status == "MAINTENANCE" ? "AVAILABLE" : "MAINTENANCE";
-                _context.SaveChanges();
+                // Send the error message to the view to trigger the popup
+                TempData["ErrorMessage"] = result.Message;
             }
+
             return RedirectToAction("Rooms");
         }
 
@@ -60,8 +66,6 @@ namespace HotelManagementSystem.Controllers
             if (task != null && task.CheckoutTime.HasValue)
             {
                 DateTime requiredDeadline = task.CheckoutTime.Value.AddHours(1);
-
-                // Combine the Manager's submitted Date and Time to check the exact moment
                 DateTime assignedDateTime = targetDate.Date.Add(deadlineTime);
 
                 if (assignedDateTime > requiredDeadline)

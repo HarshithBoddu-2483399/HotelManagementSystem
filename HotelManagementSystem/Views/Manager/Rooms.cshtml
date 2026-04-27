@@ -6,6 +6,57 @@
 
 <link rel="stylesheet" href="/css/rooms.css" />
 
+<style>
+    .custom-popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1050;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .custom-popup-box {
+        background: #fff;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        max-width: 400px;
+        text-align: center;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .custom-popup-box h4 {
+        color: #dc3545;
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+
+    .custom-popup-btn {
+        background: #343a40;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 15px;
+        font-weight: bold;
+    }
+
+    .custom-popup-btn:hover {
+        background: #23272b;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Rooms Inventory</h2>
@@ -27,7 +78,7 @@
                             var statusClass = "status-available";
                             if (room.Status == "OCCUPIED") statusClass = "status-occupied";
                             else if (room.Status == "MAINTENANCE") statusClass = "status-maintenance";
-                            else if (room.Status == "BOOKED") statusClass = "status-occupied"; // Handles booked status visually
+                            else if (room.Status == "BOOKED") statusClass = "status-occupied";
                         }
                         <span class="room-badge @statusClass">@room.Status</span>
                     </div>
@@ -37,10 +88,18 @@
                 </div>
                 <div class="card-footer">
                     <div style="width: 100%;">
-                        <form asp-action="ToggleMaintenance" asp-controller="Manager" method="post" style="display:block; width:100%;">
+                        <form asp-action="ToggleMaintenance" asp-controller="Manager" method="post" style="display:block; width:100%;"
+                              onsubmit="return validateMaintenanceToggle(this, '@room.Status');">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="roomId" value="@room.RoomId" />
-                            <button type="submit" class="btn-room-action" style="width: 100%;">Toggle Maintenance</button>
+                            
+                            @{
+                                // Optional visual cue: slight opacity drop if button shouldn't be clicked
+                                var opacity = (room.Status == "AVAILABLE" || room.Status == "MAINTENANCE") ? "1" : "0.5";
+                            }
+                            <button type="submit" class="btn-room-action" style="width: 100%; opacity: @opacity;">
+                                @(room.Status == "MAINTENANCE" ? "Mark Available" : "Toggle Maintenance")
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -49,3 +108,41 @@
         }
     </div>
 </div>
+
+<div id="statusPopup" class="custom-popup-overlay">
+    <div class="custom-popup-box">
+        <h4>ALERT!</h4>
+        <p id="popupMessage">Error message goes here.</p>
+        <button type="button" class="custom-popup-btn" onclick="closePopup()">OK</button>
+    </div>
+</div>
+
+<script>
+    // Show the custom popup
+    function showPopup(message) {
+        document.getElementById('popupMessage').innerText = message;
+        document.getElementById('statusPopup').style.display = 'flex';
+    }
+
+    // Close the custom popup
+    function closePopup() {
+        document.getElementById('statusPopup').style.display = 'none';
+    }
+
+    // Triggered when the user clicks the toggle button
+    function validateMaintenanceToggle(form, currentStatus) {
+        if (currentStatus !== 'AVAILABLE' && currentStatus !== 'MAINTENANCE') {
+            showPopup('Cannot change status. Room is currently ' + currentStatus + ' and cannot be kept under maintenance.');
+            return false; // Prevents form submission
+        }
+        return true; 
+    }
+
+    // Check if the server sent back an error message via TempData
+    window.onload = function() {
+        var serverError = '@TempData["ErrorMessage"]';
+        if (serverError && serverError.trim() !== '') {
+            showPopup(serverError);
+        }
+    };
+</script>

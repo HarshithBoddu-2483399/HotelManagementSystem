@@ -6,6 +6,57 @@
 
 <link rel="stylesheet" href="/css/rooms.css" />
 
+<style>
+    .custom-popup-overlay {
+        display: none; /* Hidden by default */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        z-index: 1050; /* Sit on top */
+        align-items: center;
+        justify-content: center;
+    }
+
+    .custom-popup-box {
+        background: #fff;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        max-width: 400px;
+        text-align: center;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .custom-popup-box h4 {
+        color: #dc3545; /* Bootstrap Danger Red */
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+
+    .custom-popup-btn {
+        background: #343a40;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 15px;
+        font-weight: bold;
+    }
+
+    .custom-popup-btn:hover {
+        background: #23272b;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Rooms</h2>
@@ -39,10 +90,17 @@
                         <a href="/Room/Edit?id=@room.RoomId" class="btn-room-action">Edit</a>
                     </div>
                     <div>
-                        <form asp-action="ToggleMaintenance" asp-controller="Room" method="post" style="display:inline-block;">
+                        <form asp-action="ToggleMaintenance" asp-controller="Room" method="post" style="display:inline-block;" 
+                              onsubmit="return validateMaintenanceToggle(this, '@room.Status');">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@room.RoomId" />
-                            <button type="submit" class="btn-room-action">Toggle Maintenance</button>
+                            
+                            @{
+                                var opacity = (room.Status == "AVAILABLE" || room.Status == "MAINTENANCE") ? "1" : "0.5";
+                            }
+                            <button type="submit" class="btn-room-action" style="opacity: @opacity;">
+                                @(room.Status == "MAINTENANCE" ? "Mark Available" : "Toggle Maintenance")
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -51,3 +109,37 @@
         }
     </div>
 </div>
+
+<div id="statusPopup" class="custom-popup-overlay">
+    <div class="custom-popup-box">
+        <h4>ALERT!</h4>
+        <p id="popupMessage">Error message goes here.</p>
+        <button type="button" class="custom-popup-btn" onclick="closePopup()">OK</button>
+    </div>
+</div>
+
+<script>
+    function showPopup(message) {
+        document.getElementById('popupMessage').innerText = message;
+        document.getElementById('statusPopup').style.display = 'flex';
+    }
+
+    function closePopup() {
+        document.getElementById('statusPopup').style.display = 'none';
+    }
+
+    function validateMaintenanceToggle(form, currentStatus) {
+        if (currentStatus !== 'AVAILABLE' && currentStatus !== 'MAINTENANCE') {
+            showPopup('Cannot change status. Room is currently ' + currentStatus + ' and cannot be kept under maintenance.');
+            return false; 
+        }
+        return true; 
+    }
+
+    window.onload = function() {
+        var serverError = '@TempData["ErrorMessage"]';
+        if (serverError && serverError.trim() !== '') {
+            showPopup(serverError);
+        }
+    };
+</script>

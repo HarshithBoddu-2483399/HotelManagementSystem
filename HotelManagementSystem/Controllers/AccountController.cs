@@ -1,13 +1,9 @@
-﻿using HotelManagementSystem.Data;
-using HotelManagementSystem.Services;
+﻿using HotelManagementSystem.Services;
 using HotelManagementSystem.ViewModels;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -16,12 +12,10 @@ namespace HotelManagementSystem.Controllers
     public class AccountController : Controller
     {
         private readonly IAccountService _accountService;
-        private readonly ApplicationDbContext _context;
 
-        public AccountController(IAccountService accountService, ApplicationDbContext context)
+        public AccountController(IAccountService accountService)
         {
             _accountService = accountService;
-            _context = context;
         }
 
         [HttpGet]
@@ -30,16 +24,15 @@ namespace HotelManagementSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
         {
-            var user = await _accountService.Authenticate(username, password);
+            var user = await _accountService.AuthenticateAsync(username, password);
 
             if (user != null)
             {
                 if (user.Role == "Guest")
                 {
-                    var guestCheck = _context.Guests.Find(user.UserId);
+                    var guestCheck = await _accountService.GetGuestByIdAsync(user.UserId);
                     if (guestCheck != null && guestCheck.RequiresPasswordReset)
                     {
-                        // Store their ID securely for one single request
                         TempData["ResetGuestId"] = guestCheck.GuestId;
                         return RedirectToAction("ForceChangePassword");
                     }
@@ -60,7 +53,7 @@ namespace HotelManagementSystem.Controllers
                 return user.Role switch
                 {
                     "Admin" => RedirectToAction("Index", "Report"),
-                    "Manager" => RedirectToAction("Index", "Manager"),  
+                    "Manager" => RedirectToAction("Index", "Manager"),
                     "Housekeeping" => RedirectToAction("StaffIndex", "Housekeeping"),
                     "Receptionist" => RedirectToAction("Index", "Reception"),
                     "Guest" => RedirectToAction("Index", "GuestPortal"),
@@ -80,59 +73,31 @@ namespace HotelManagementSystem.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous] // Anyone can see this page, even if logged out
-        public IActionResult LoggedOut()
-        {
-            return View();
-        }
+        [AllowAnonymous]
+        public IActionResult LoggedOut() => View();
 
         [AllowAnonymous]
-        public IActionResult AccessDenied()
-        {
-            return View();
-        }
+        public IActionResult AccessDenied() => View();
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult Register()
-        {
-            return View();
-        }
+        public IActionResult Register() => View();
 
         [HttpPost]
         [AllowAnonymous]
-        public IActionResult Register(ViewModels.GuestRegisterViewModel model)
+        public async Task<IActionResult> Register(GuestRegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
-                if (_context.Guests.Any(g => g.Email == model.Email))
+                var result = await _accountService.RegisterGuestAsync(model);
+                if (result.IsSuccess)
                 {
-                    ModelState.AddModelError("Email", "Already user with this mail id exists.");
-                    return View(model);
-                }
-                if (_context.Guests.Any(g => g.ContactInfo == model.Phone))
-                {
-                    ModelState.AddModelError("Phone", "Phone no you are trying has already acc with us trying resetting password.");
-                    return View(model);
+                    TempData["Success"] = "Registration successful! You can now log in.";
+                    return RedirectToAction("Login");
                 }
 
-                var newGuest = new Models.Guest
-                {
-                    Name = model.Name,
-                    Email = model.Email,
-                    ContactInfo = model.Phone,
-                    // SECURE: Both Password and PIN are securely hashed
-                    Password = BCrypt.Net.BCrypt.HashPassword(model.Password),
-                    RecoveryPin = BCrypt.Net.BCrypt.HashPassword(model.RecoveryPin)
-                };
-
-                _context.Guests.Add(newGuest);
-                _context.SaveChanges();
-
-                TempData["Success"] = "Registration successful! You can now log in.";
-                return RedirectToAction("Login");
+                ModelState.AddModelError(result.ErrorMessage.Contains("Email") ? "Email" : "Phone", result.ErrorMessage);
             }
-
             return View(model);
         }
 
@@ -147,13 +112,11 @@ namespace HotelManagementSystem.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        // UPDATED: Added newRecoveryPin to parameters so they can set a new secure PIN after a reset
-        public IActionResult ForceChangePassword(string newPassword, string confirmPassword, string newRecoveryPin)
+        public async Task<IActionResult> ForceChangePassword(string newPassword, string confirmPassword, string newRecoveryPin)
         {
             if (TempData["ResetGuestId"] == null) return RedirectToAction("Login");
             int guestId = (int)TempData["ResetGuestId"];
 
-            // Added check for the PIN length
             if (newPassword.Length < 6 || newPassword != confirmPassword || string.IsNullOrEmpty(newRecoveryPin) || newRecoveryPin.Length != 4)
             {
                 ViewBag.Error = "Please ensure passwords match and your PIN is exactly 4 digits.";
@@ -161,15 +124,9 @@ namespace HotelManagementSystem.Controllers
                 return View();
             }
 
-            var guest = _context.Guests.Find(guestId);
-            if (guest != null)
+            var success = await _accountService.ForceChangePasswordAsync(guestId, newPassword, newRecoveryPin);
+            if (success)
             {
-                // SECURE: Hash both the new Password and the new PIN
-                guest.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
-                guest.RecoveryPin = BCrypt.Net.BCrypt.HashPassword(newRecoveryPin);
-                guest.RequiresPasswordReset = false;
-                _context.SaveChanges();
-
                 TempData["Success"] = "Account fully secured! Please log in with your new password.";
                 return RedirectToAction("Login");
             }
@@ -179,17 +136,17 @@ namespace HotelManagementSystem.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult CheckEmail(string email)
+        public async Task<IActionResult> CheckEmail(string email)
         {
-            bool exists = _context.Guests.Any(g => g.Email == email);
+            bool exists = await _accountService.CheckEmailExistsAsync(email);
             return Json(new { exists });
         }
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult CheckPhone(string phone)
+        public async Task<IActionResult> CheckPhone(string phone)
         {
-            bool exists = _context.Guests.Any(g => g.ContactInfo == phone);
+            bool exists = await _accountService.CheckPhoneExistsAsync(phone);
             return Json(new { exists });
         }
 
@@ -199,29 +156,16 @@ namespace HotelManagementSystem.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public IActionResult ForgotPassword(ViewModels.GuestForgotPasswordViewModel model)
+        public async Task<IActionResult> ForgotPassword(GuestForgotPasswordViewModel model)
         {
             if (ModelState.IsValid)
             {
-                // SECURE CHECK 1: Only find by Email and Phone (Ignore PIN for now since it's hashed in DB)
-                var guest = _context.Guests.FirstOrDefault(g =>
-                    g.Email == model.Email &&
-                    g.ContactInfo == model.Phone);
-
-                if (guest != null && !string.IsNullOrEmpty(guest.RecoveryPin))
+                var success = await _accountService.ResetForgotPasswordAsync(model);
+                if (success)
                 {
-                    // SECURE CHECK 2: Verify the typed PIN against the hashed PIN in the DB
-                    if (BCrypt.Net.BCrypt.Verify(model.RecoveryPin, guest.RecoveryPin))
-                    {
-                        // SECURE: Hash the new password before saving
-                        guest.Password = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
-                        _context.SaveChanges();
-
-                        TempData["Success"] = "Password reset successfully! You can now log in.";
-                        return RedirectToAction("Login");
-                    }
+                    TempData["Success"] = "Password reset successfully! You can now log in.";
+                    return RedirectToAction("Login");
                 }
-
                 ViewBag.Error = "Verification failed. Please check your Email, Phone, or PIN. If you forgot your PIN, please contact the front desk.";
             }
             return View(model);
@@ -229,40 +173,22 @@ namespace HotelManagementSystem.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult ClaimAccount()
-        {
-            return View();
-        }
+        public IActionResult ClaimAccount() => View();
 
         [HttpPost]
         [AllowAnonymous]
-        public IActionResult ClaimAccount(ViewModels.ClaimAccountViewModel model)
+        public async Task<IActionResult> ClaimAccount(ClaimAccountViewModel model)
         {
             if (ModelState.IsValid)
             {
-                var reservation = _context.Reservations.Find(model.ReservationId);
-
-                if (reservation != null)
+                var result = await _accountService.ClaimAccountAsync(model);
+                if (result.IsSuccess)
                 {
-                    var guest = _context.Guests.Find(reservation.GuestId);
-
-                    if (guest != null &&
-                        guest.Email.ToLower().Trim() == model.Email.ToLower().Trim() &&
-                        guest.ContactInfo.Trim() == model.Phone.Trim())
-                    {
-                        // SECURE: Hash BOTH the new Password and the new PIN when claiming
-                        guest.Password = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
-                        guest.RecoveryPin = BCrypt.Net.BCrypt.HashPassword(model.RecoveryPin);
-                        _context.SaveChanges();
-
-                        TempData["Success"] = "Account claimed successfully! You can now log in with your new password.";
-                        return RedirectToAction("Login");
-                    }
+                    TempData["Success"] = "Account claimed successfully! You can now log in with your new password.";
+                    return RedirectToAction("Login");
                 }
-
-                ViewBag.Error = "Verification failed. Please ensure your Reservation ID, Email, and Phone match your booking exactly.";
+                ViewBag.Error = result.ErrorMessage;
             }
-
             return View(model);
         }
     }

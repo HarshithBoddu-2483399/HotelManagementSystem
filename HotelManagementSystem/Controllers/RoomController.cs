@@ -22,10 +22,7 @@ namespace HotelManagementSystem.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
         [HttpPost]
         public IActionResult Create(Room room)
@@ -52,10 +49,17 @@ namespace HotelManagementSystem.Controllers
             return RedirectToAction("Index");
         }
 
+        // UPDATED: Handle the Tuple result and set TempData
         [HttpPost]
         public IActionResult ToggleMaintenance(int id)
         {
-            _roomService.ToggleMaintenance(id);
+            var result = _roomService.ToggleMaintenance(id);
+
+            if (!result.Success)
+            {
+                TempData["ErrorMessage"] = result.Message;
+            }
+
             return RedirectToAction("Index");
         }
     }
