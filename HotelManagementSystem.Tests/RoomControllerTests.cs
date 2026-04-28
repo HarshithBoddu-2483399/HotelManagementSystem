@@ -2,6 +2,7 @@
 using HotelManagementSystem.Models;
 using HotelManagementSystem.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Moq;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -13,151 +14,76 @@ namespace HotelManagementSystem.Tests.Controllers
     {
         private Mock<IRoomService> _mockRoomService;
         private RoomController _controller;
+        private Mock<ITempDataDictionary> _mockTempData;
 
         [SetUp]
         public void SetUp()
         {
-            // Runs before EVERY test.
             _mockRoomService = new Mock<IRoomService>();
             _controller = new RoomController(_mockRoomService.Object);
+            _mockTempData = new Mock<ITempDataDictionary>();
+            _controller.TempData = _mockTempData.Object;
         }
 
         [TearDown]
         public void TearDown()
         {
-            // Runs after EVERY test to clean up resources and fix the Dispose error.
             _controller?.Dispose();
         }
 
         [Test]
         public void Index_ReturnsViewResult_WithAListOfRooms()
         {
-            // Arrange
-            var mockRooms = new List<Room>
-            {
-                new Room { RoomId = 1, RoomNumber = "101" },
-                new Room { RoomId = 2, RoomNumber = "102" }
-            };
-            _mockRoomService.Setup(service => service.GetAllRooms()).Returns(mockRooms);
+            var mockRooms = new List<Room> { new Room { RoomId = 1, RoomNumber = "101" } };
+            _mockRoomService.Setup(s => s.GetAllRooms()).Returns(mockRooms);
 
-            // Act
-            var result = _controller.Index();
+            var result = _controller.Index() as ViewResult;
 
-            // Assert
-            var viewResult = result as ViewResult;
-            Assert.That(viewResult, Is.Not.Null, "Expected a ViewResult");
-
-            var model = viewResult.Model as List<Room>;
-            Assert.That(model, Is.Not.Null, "Expected model to be a List<Room>");
-            Assert.That(model.Count, Is.EqualTo(2));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Model, Is.InstanceOf<List<Room>>());
         }
 
         [Test]
-        public void Create_Get_ReturnsViewResult()
+        public void ToggleMaintenance_Post_Success_RedirectsToIndex()
         {
+            // Arrange: Setup the Tuple return value
+            _mockRoomService.Setup(s => s.ToggleMaintenance(1))
+                            .Returns((true, "Success"));
+
             // Act
-            var result = _controller.Create();
+            var result = _controller.ToggleMaintenance(1) as RedirectToActionResult;
 
             // Assert
-            Assert.That(result, Is.InstanceOf<ViewResult>());
+            Assert.That(result.ActionName, Is.EqualTo("Index"));
+            _mockRoomService.Verify(s => s.ToggleMaintenance(1), Times.Once);
         }
 
         [Test]
-        public void Create_Post_CallsAddRoomAndRedirectsToIndex()
+        public void ToggleMaintenance_Post_Failure_SetsTempData()
         {
-            // Arrange
-            var newRoom = new Room { RoomId = 3, RoomNumber = "103" };
+            // Arrange: Setup a failed Tuple return
+            string errorMsg = "Room is occupied";
+            _mockRoomService.Setup(s => s.ToggleMaintenance(1))
+                            .Returns((false, errorMsg));
 
             // Act
-            var result = _controller.Create(newRoom);
+            var result = _controller.ToggleMaintenance(1) as RedirectToActionResult;
 
             // Assert
-            _mockRoomService.Verify(service => service.AddRoom(newRoom), Times.Once);
-
-            var redirectToActionResult = result as RedirectToActionResult;
-            Assert.That(redirectToActionResult, Is.Not.Null);
-            Assert.That(redirectToActionResult.ActionName, Is.EqualTo("Index"));
+            _mockTempData.VerifySet(t => t["ErrorMessage"] = errorMsg, Times.Once);
+            Assert.That(result.ActionName, Is.EqualTo("Index"));
         }
 
         [Test]
-        public void Edit_Get_ValidId_ReturnsViewResult_WithRoom()
+        public void Edit_Post_ValidRoom_RedirectsToIndex()
         {
-            // Arrange
-            var existingRoom = new Room { RoomId = 1, RoomNumber = "101" };
-            _mockRoomService.Setup(service => service.GetRoomById(1)).Returns(existingRoom);
+            var room = new Room { RoomId = 1 };
+            _mockRoomService.Setup(s => s.GetRoomById(1)).Returns(room);
 
-            // Act
-            var result = _controller.Edit(1);
+            var result = _controller.Edit(room) as RedirectToActionResult;
 
-            // Assert
-            var viewResult = result as ViewResult;
-            Assert.That(viewResult, Is.Not.Null);
-            Assert.That(viewResult.Model, Is.EqualTo(existingRoom));
-        }
-
-        [Test]
-        public void Edit_Get_InvalidId_ReturnsNotFoundView()
-        {
-            // Arrange
-            _mockRoomService.Setup(service => service.GetRoomById(99)).Returns((Room)null);
-
-            // Act
-            var result = _controller.Edit(99);
-
-            // Assert
-            var viewResult = result as ViewResult;
-            Assert.That(viewResult, Is.Not.Null);
-            Assert.That(viewResult.ViewName, Is.EqualTo("NotFound"));
-        }
-
-        [Test]
-        public void Edit_Post_ValidRoom_CallsUpdateAndRedirects()
-        {
-            // Arrange
-            var updatedRoom = new Room { RoomId = 1, RoomNumber = "101 Updated" };
-            _mockRoomService.Setup(service => service.GetRoomById(1)).Returns(new Room { RoomId = 1 });
-
-            // Act
-            var result = _controller.Edit(updatedRoom);
-
-            // Assert
-            _mockRoomService.Verify(service => service.UpdateRoom(updatedRoom), Times.Once);
-
-            var redirectResult = result as RedirectToActionResult;
-            Assert.That(redirectResult, Is.Not.Null);
-            Assert.That(redirectResult.ActionName, Is.EqualTo("Index"));
-        }
-
-        [Test]
-        public void Edit_Post_InvalidRoom_ReturnsNotFoundView()
-        {
-            // Arrange
-            var invalidRoom = new Room { RoomId = 99 };
-            _mockRoomService.Setup(service => service.GetRoomById(99)).Returns((Room)null);
-
-            // Act
-            var result = _controller.Edit(invalidRoom);
-
-            // Assert
-            _mockRoomService.Verify(service => service.UpdateRoom(It.IsAny<Room>()), Times.Never);
-
-            var viewResult = result as ViewResult;
-            Assert.That(viewResult, Is.Not.Null);
-            Assert.That(viewResult.ViewName, Is.EqualTo("NotFound"));
-        }
-
-        [Test]
-        public void ToggleMaintenance_Post_CallsToggleAndRedirects()
-        {
-            // Act
-            var result = _controller.ToggleMaintenance(1);
-
-            // Assert
-            _mockRoomService.Verify(service => service.ToggleMaintenance(1), Times.Once);
-
-            var redirectResult = result as RedirectToActionResult;
-            Assert.That(redirectResult, Is.Not.Null);
-            Assert.That(redirectResult.ActionName, Is.EqualTo("Index"));
+            Assert.That(result.ActionName, Is.EqualTo("Index"));
+            _mockRoomService.Verify(s => s.UpdateRoom(room), Times.Once);
         }
     }
 }

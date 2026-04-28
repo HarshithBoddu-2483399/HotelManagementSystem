@@ -10,7 +10,7 @@
         <div class="alert alert-danger">@ViewBag.Error</div>
     }
 
-    <form action="/Reservation/Create" method="post" class="row g-3">
+    <form asp-controller="Reservation" asp-action="Create" method="post" class="row g-3">
         
         <div class="col-md-4 position-relative">
             <label class="form-label">Phone</label>

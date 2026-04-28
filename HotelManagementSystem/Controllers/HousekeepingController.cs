@@ -92,27 +92,27 @@ namespace HotelManagementSystem.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,Manager")] // Optional: Secures this so only Admins/Managers can force clean
+        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> MarkClean(int taskId)
         {
-            // 1. Find the task in the database
             var task = _context.HousekeepingTasks.FirstOrDefault(t => t.TaskId == taskId);
 
             if (task == null)
             {
-                return NotFound(); // Safety check
+                return NotFound();
             }
 
-            // 2. Update the status to completed
             task.TaskStatus = "COMPLETED";
+            task.CompletedAt = DateTime.Now;
 
-            // If you have a CompletedAt or CheckoutTime column, update it here!
-            // task.CompletedAt = DateTime.Now; 
+            var room = _context.Rooms.FirstOrDefault(r => r.RoomId == task.RoomId);
+            if (room != null)
+            {
+                room.Status = "AVAILABLE";
+            }
 
-            // 3. Save changes to the database
             _context.SaveChanges();
 
-            // 4. Redirect back to the All Tasks page to see the updated green badge
             return RedirectToAction("AllTasks");
         }
 
