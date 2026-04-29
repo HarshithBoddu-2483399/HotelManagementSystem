@@ -76,6 +76,31 @@ namespace HotelManagementSystem.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ForcePasswordReset(int userId, string newPassword)
+        {
+            // 1. Find the staff member in the database
+            var staff = _context.Users.Find(userId);
+
+            if (staff == null)
+            {
+                TempData["Error"] = "Staff member not found.";
+                return RedirectToAction("StaffList");
+            }
+
+            // 2. Hash the new temporary password using BCrypt
+            staff.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+
+            staff.RequiresPasswordReset = true; 
+
+            // 3. Save to database
+            _context.SaveChanges();
+
+            TempData["Success"] = $"Password for {staff.Name} has been successfully reset.";
+            return RedirectToAction("StaffList");
+        }
+
+        [HttpPost]
         public IActionResult DeleteStaff(int userId)
         {
             _managerService.DeleteStaff(userId);

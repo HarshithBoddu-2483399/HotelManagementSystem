@@ -22,6 +22,7 @@ namespace HotelManagementSystem.Controllers
         public IActionResult Login() => View();
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string username, string password)
         {
             var user = await _accountService.AuthenticateAsync(username, password);
@@ -84,6 +85,7 @@ namespace HotelManagementSystem.Controllers
         public IActionResult Register() => View();
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [AllowAnonymous]
         public async Task<IActionResult> Register(GuestRegisterViewModel model)
         {
@@ -111,6 +113,7 @@ namespace HotelManagementSystem.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [AllowAnonymous]
         public async Task<IActionResult> ForceChangePassword(string newPassword, string confirmPassword, string newRecoveryPin)
         {
@@ -155,6 +158,7 @@ namespace HotelManagementSystem.Controllers
         public IActionResult ForgotPassword() => View();
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword(GuestForgotPasswordViewModel model)
         {
